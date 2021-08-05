@@ -15,8 +15,7 @@ def test():
     table = rollingHash(S, 3)
     T = 'tab'
     hs = rollingHash(T,3)[0]
-    print(table)
-    print(hs in table)
+    print(hs in table, True)
 
 def perf():
     from time import perf_counter as time
@@ -24,7 +23,6 @@ def perf():
     start = time()
     rollingHash(S,100)
     print(f"{(time()-start)*1000}ms")
-
 
 if __name__=='__main__':
     test()

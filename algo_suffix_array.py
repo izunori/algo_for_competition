@@ -4,8 +4,8 @@ def ManberMyers(S, conv=ord):
     d = defaultdict(list)
     for i,s in enumerate(S):
         d[conv(s)].append(i)
-    rank = [0]*N
-    i = 0
+    rank = [0]*(N+1)
+    i = 1 # offset for empty
     tbd = deque([])
     for k in sorted(d.keys()):
         for t in d[k]:
@@ -26,7 +26,7 @@ def ManberMyers(S, conv=ord):
             i += len(d[k])
             if len(d[k]) > 1:
                 tbd.append((d[k],l*2))
-    result = [0]*N
+    result = [0]*(N+1)
     for i,r in enumerate(rank):
         result[r] = i
     return result
@@ -60,23 +60,59 @@ def ManberMyers2(S, conv = ord):
 
 def for_test(S):
     N = len(S)
-    temp = [(S[i:],i) for i in range(N)]
+    temp = [(S[i:],i) for i in range(N+1)]
     _, res = zip(*sorted(temp))
     return list(res)
+
+def LongestCommonPrefixArray(S, sa):
+    N = len(S)
+    rank = [0]*(N+1)
+    for i,s in enumerate(sa):
+        rank[s] = i
+    s0 = S
+    s1 = S[sa[rank[0]-1]:]
+    h = 0
+    for c0,c1 in zip(s0,s1):
+        if c0==c1:
+            h += 1
+        else:
+            break
+    lcp = [h]
+    for i in range(1,N):
+        h = max(0,h-1)
+        s0 = S[i+h:]
+        s1 = S[sa[rank[i]-1]+h:]
+        for c0,c1 in zip(s0,s1):
+            if c0==c1:
+                h += 1
+            else:
+                break
+        lcp.append(h)
+    result = [0]*N
+    for i,l in enumerate(lcp):
+        result[rank[i]-1] = l
+    return result
 
 def test():
     S = 'abracadabra'
     res = ManberMyers(S)
     res2 = for_test(S)
+    lcp = LongestCommonPrefixArray(S, res)
+
     print(res)
     print(res2)
+    print(lcp)
     print(res == res2)
+
     S = 'a'*20
     res = ManberMyers(S)
     res2 = for_test(S)
+    lcp = LongestCommonPrefixArray(S, res)
     print(res)
     print(res2)
+    print(lcp)
     print(res == res2)
+
 
 def perf():
     from time import perf_counter as time
@@ -97,4 +133,4 @@ def perf():
 
 if __name__=='__main__':
     test()
-    perf()
+    #perf()

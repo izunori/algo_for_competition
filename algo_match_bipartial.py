@@ -1,4 +1,4 @@
-def match_bipartial(g,A,B):
+def matchBipartile(g,A,B):
     m = {v:-1 for v in A+B}
     cnt = 0
     def find_and_match(a):
@@ -19,12 +19,18 @@ def match_bipartial(g,A,B):
                 break
     return cnt 
 
+def minimumCostBipartile(g,A,B):
+    m = {v:-1 for v in A+B}
+    cost = 0
+    def find_and_match(a):
+        for b in g[a]:
+
 def test():
     g = {
             1:[4,5,6],2:[4],3:[5],
             4:[1,2],5:[1,3],6:[1]
         }
-    print(match_bipartial(g,[1,2,3],[4,5,6]))
+    print(match_bipartile(g,[1,2,3],[4,5,6]))
 
 if __name__=='__main__':
     test()

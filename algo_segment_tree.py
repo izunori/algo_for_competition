@@ -11,12 +11,6 @@ class SegmentTree:
         for i in range(self.l-1,0,-1):
             self.data[i] = op(self.data[2*i], self.data[2*i+1])
 
-    def get_data(self, i=None):
-        if i is None:
-            return self.data[self.l:self.l + self.N]
-        else:
-            return self.data[self.l+i]
-
     def set(self,i,val):
         i += self.l
         self.data[i] = val
@@ -38,6 +32,17 @@ class SegmentTree:
                 j -= 1
             i, j = i//2, j//2
         return s
+
+    def get_data(self, i=None):
+        if i is None:
+            return self.data[self.l:self.l + self.N]
+        else:
+            return self.data[self.l+i]
+
+    def calc(self):
+        for i in range(self.N):
+            self.get(i,i+1)
+
 
     ## extra
     def get_recur(self,i,j):
