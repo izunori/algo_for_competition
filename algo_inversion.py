@@ -1,4 +1,4 @@
-from algo_bit import BIT
+from algo_binary_indexed_tree import BinaryIndexedTree as BIT
 
 def inversion(A):
     # compress
