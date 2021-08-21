@@ -64,10 +64,12 @@ def polymul2(f,g):
     return res[:m]
 
 # ntt
-# UNDER CONSTRUCTION
+# 2^23 = 8388608
 def polymul3(f,g,MOD = 998244353):
     nf = len(f)
     ng = len(g)
+    f = [x % MOD for x in f]
+    g = [x % MOD for x in g]
     m = nf+ng-1
     k = (m-1).bit_length()
     l = 2**k
@@ -77,24 +79,28 @@ def polymul3(f,g,MOD = 998244353):
     for i in range(24):
         ws.append(pow(ws[-1],2,MOD))
     ws.reverse()
-    iws = []
-    for w in ws:
-        iws.append(pow(w,MOD-2,MOD))
+    iws = [pow(31,MOD-2,MOD)]
+    for i in range(24):
+        iws.append(pow(iws[-1],2,MOD))
+    iws.reverse()
+
     f = f+[0]*(l-nf)
     g = g+[0]*(l-ng)
-    def _fft(A,k,ws):
+    def _fft(A,k,tws):
         if k == 0:
             return A
-        w = ws[k+1]
+        w = tws[k+1]
         A0 = A[::2]
         A1 = A[1::2]
         n2 = 1<<(k-1)
-        B0 = _fft(A0, k-1, ws)
-        B1 = _fft(A1, k-1, ws)
+        B0 = _fft(A0, k-1, tws)
+        B1 = _fft(A1, k-1, tws)
         res = [0]*(1<<k)
+        wi = 1
         for i,(b0,b1) in enumerate(zip(B0,B1)):
-            res[i] = (b0 + b1 * (w**i)) % MOD
-            res[i+n2] = (b0 - b1 * (w**i)) % MOD
+            res[i] = (b0 + b1 * wi) % MOD
+            res[i+n2] = (-res[i]+2*b0) % MOD
+            wi = (wi*w) % MOD
         return res
     def _polymul(u,v,k):
         U = _fft(u, k, ws)
@@ -107,8 +113,8 @@ def polymul3(f,g,MOD = 998244353):
 
 def test_polymul():
     from time import perf_counter as time
-    N = 10**4
-    M = 20**6 # looks good in <= 20**6
+    N = 10**5
+    M = 2*10**6 # looks good in <= 2*10**6
     f = np.random.randint(M, size=N)
     g = np.random.randint(M, size=N)
     start = time()
@@ -119,8 +125,8 @@ def test_polymul():
 
 def test2():
     from time import perf_counter as time
-    N = 10000
-    M = 20**6 # looks good in <= 20**6
+    N = 10**4
+    M = 2*10**6 # looks good in <= 2*10**6
     f = np.random.randint(M, size=N).tolist()
     g = np.random.randint(M, size=N).tolist()
     start = time()
@@ -130,14 +136,21 @@ def test2():
     start = time()
     fg2 = polymul2(f,g)
     print(f'{time()-start}s')
+    print(all([(int(x) == int(y)) for x, y in zip(fg1,fg2)]))
+    for i,(x,y) in enumerate(zip(fg1,fg2)):
+        if not (x == y):
+            print(i, x, y)
+            break
 
     start = time()
     MOD = 998244353
     fg3 = polymul3(f,g,MOD)
     print(f'{time()-start}s')
-    for x,y in zip(fg1,fg3):
-        print(x%MOD,y,(x%MOD)==y)
-
+    print(all([((x%MOD) == y) for x, y in zip(fg1,fg3)]))
+    for i,(x,y) in enumerate(zip(fg1,fg3)):
+        if not (x % MOD == y):
+            print(i,x % MOD,y)
+            break
 
 if __name__=='__main__':
     #test_polymul()
