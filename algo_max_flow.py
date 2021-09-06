@@ -30,6 +30,36 @@ def FordFulkerson(graph,capacity,start,terminal):
             cap[(nv,v)] += tf
     return flow 
 
+# graph : no direction
+def EdmondsKarp(graph,capacity,start,terminal):
+    cap = defaultdict(int, capacity)
+    flow = 0
+    while True:
+        prev = defaultdict(int)
+        visited = defaultdict(bool)
+        dq = deque([start])
+        visited[start] = True
+        while dq:
+            v = dq.popleft()
+            if v == terminal:
+                break
+            for nv in graph[v]:
+                if not visited[nv] and cap[(v,nv)] > 0:
+                    visited[nv] = True
+                    prev[nv] = v
+                    dq.append(nv)
+        else:
+            return flow 
+        route = [terminal]
+        while route[-1] != start:
+            route.append(prev[route[-1]])
+        tf = min(cap[(v,nv)] for v,nv in zip(route[1:],route))
+        flow += tf
+        for v,nv in zip(route[1:],route):
+            cap[(v,nv)] -= tf
+            cap[(nv,v)] += tf
+    return flow 
+
 def test():
     # sample : https://www.geeksforgeeks.org/ford-fulkerson-algorithm-for-maximum-flow-problem/
     UVC = [
@@ -51,6 +81,7 @@ def test():
         g[v].append(u)
         cap[(u,v)] = c
     print(FordFulkerson(g,cap,0,5), 23)
+    print(EdmondsKarp(g,cap,0,5), 23)
 
 if __name__=='__main__':
     test()
