@@ -10,7 +10,6 @@ class SegmentTree:
         self.data = [default]*self.l + data + [default]*(self.l-N)
         for i in range(self.l-1,0,-1):
             self.data[i] = op(self.data[2*i], self.data[2*i+1])
-
     def set(self,i,val):
         i += self.l
         self.data[i] = val
@@ -18,7 +17,6 @@ class SegmentTree:
         while i > 0:
             self.data[i] = self.op(self.data[2*i], self.data[2*i+1])
             i = i//2
-
     def get(self,i,j):
         i += self.l
         j += self.l
@@ -32,16 +30,39 @@ class SegmentTree:
                 j -= 1
             i, j = i//2, j//2
         return s
+    
+
+    # under construction
+    def findMinimumLessThan(self,l,r,f):
+        v = self.default
+        j = r+self.l
+        fail = False
+        while j > 0:
+            if f(self.op(v,self.data[j-1])):
+                if j & 1:
+                    v = self.op(self.data[j-1],v)
+                    j -= 1
+                else:
+                    if not fail:
+                        j //= 2
+                    else:
+                        v = self.op(self.data[j-1],v)
+                        j -= 1
+            else:
+                if self.l < j:
+                    return max(l,j - self.l)
+                fail = True
+                j *= 2
+                if j == self.L:
+                    return max(l,0)
+        return l
+
 
     def get_data(self, i=None):
         if i is None:
             return self.data[self.l:self.l + self.N]
         else:
             return self.data[self.l+i]
-
-    def calc(self):
-        for i in range(self.N):
-            self.get(i,i+1)
 
 
     ## extra
@@ -65,5 +86,17 @@ def test():
     print(seg.get(0,8),30) # 10+1+2+3+4+5+6-1
     print(seg.get_recur(0,8),30) # 10+1+2+3+4+5+6-1
 
+def test2():
+    data = list(range(6))
+    seg = SegmentTree(data, min, 10**18)
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 0))
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 1))
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 2))
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 3))
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 4))
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 5))
+    print(seg.findMinimumLessThan(2,6,lambda x : x >= 6))
+
+
 if __name__ == '__main__':
-    test()
+    test2()

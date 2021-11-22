@@ -1,5 +1,7 @@
 # G = [A|b]
+
 def GaussianEliminationBit(G):
+    # deprecated
     H = len(G)
 
     done = [False]*H
@@ -49,7 +51,7 @@ def num_of_sol_mod2(A,b):
     G, done = GaussianEliminationMod2(A)
 
     for z_row, dn in zip(G,done):
-        if not dn and z_row%2:
+        if not dn and z_row[-1] == 1:
             return 0
     rank = sum(done)
     return pow(2, W - rank)
