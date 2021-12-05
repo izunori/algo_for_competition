@@ -17,13 +17,14 @@ class UnionFind:
         rx = self.root(x)
         ry = self.root(y)
         if rx == ry:
-            return
+            return False
         if self.num[ry] >= self.num[rx]:
             self.num[ry] += self.num[rx]
             self.parents[rx] = ry
         else:
             self.num[rx] += self.num[ry]
             self.parents[ry] = rx
+        return True
     def get(self):
         res = defaultdict(list)
         for node in self.parents:
