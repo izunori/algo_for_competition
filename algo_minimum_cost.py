@@ -103,7 +103,7 @@ def test():
     import networkx as nx
     random.seed(10)
     V = 300
-    F = 100
+    F = 300
     UVCC = []
     G = nx.DiGraph()
 

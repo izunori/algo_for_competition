@@ -16,10 +16,9 @@ class BinaryIndexedTree:
         while i <= self.l:
             self.data[i] = self.op(self.data[i], v)
             i += i & -i
-
     # WARNING : return sum of 0<=x<i
     def get(self,i):
-        res = 0
+        res = self.default
         while i > 0:
             res = self.op(res, self.data[i])
             i -= i & -i
