@@ -18,10 +18,13 @@ class SmallestPrimeFactor:
         if n != 1:
             res[n] += 1
         return res
+    def getPrimes(self):
+        return [p for i,p in enumerate(self.spf[2:],2) if i == p]
 
 def test():
-    spf = SmallestPrimeFactor(10**6)
-    print(spf.factor(2*3*11**2*149))
+    spf = SmallestPrimeFactor(10**3)
+    print(spf.factor(2*3*11))
+    print(spf.getPrimes())
 
 if __name__=='__main__':
     test()
