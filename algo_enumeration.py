@@ -10,13 +10,14 @@ num = 200000
 fact = [1] * (num+1)
 ifact = [1] * (num+1)
 # if you need inverse
-#inv = [pow(i,MOD-2,MOD) for i in range(num+1)]
+inv = [1] * (num+1)
 
 for i in range(1,num+1):
     fact[i] = (fact[i-1] * i) % MOD
 ifact[-1] = pow(fact[-1],MOD-2,MOD)
 for i in range(1,num+1)[::-1]:
     ifact[i-1] = (ifact[i] * i)% MOD
+    inv[i] = (ifact[i] * fact[i-1]) % MOD
 
 def nPr(n,r):
     if r > n:
