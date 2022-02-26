@@ -25,22 +25,28 @@ def polymul(f,g,MOD = 998244353):
     f = f+[0]*(l-nf)
     g = g+[0]*(l-ng)
 
-    rev = []
-    for i in range(l):
-        j = int((bin(i)[2:].zfill(k))[::-1],2)
-        rev.append(j)
+    rev = [0]*l
+    for i in range(1,l):
+        if rev[i]:
+            continue
+        b,rb = 1,1<<(k-1)
+        j = 0
+        for _ in range(k):
+            if (i&b):
+               j = j|rb
+            b,rb = b<<1,rb>>1
+        rev[i],rev[j] = j,i
 
     def _fft(A,k,tws):
         n = len(A)
         res = [A[i] for i in rev]
         r = 1
-        for t in range(2,k+2):
-            w = tws[t]
+        for w in tws[2:k+2]:
             for l in range(0,n,r*2):
                 wi = 1
                 for i in range(l,l+r):
                     x = (res[i] + res[i+r]*wi) % MOD
-                    y = (-x+2*res[i]) % MOD
+                    y = (-x + 2*res[i]) % MOD
                     res[i],res[i+r] = x,y
                     wi = (wi*w) % MOD
             r <<= 1
@@ -104,7 +110,7 @@ def test_perf():
     from time import perf_counter as time
     import random
     MOD = 998244353
-    N = 10**5
+    N = 2*10**5
     M = MOD # looks good in <= 2*10**6
     f = [random.randint(0,M) for i in range(N)]
     g = [random.randint(0,M) for i in range(N)]
