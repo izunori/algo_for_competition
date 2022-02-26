@@ -29,11 +29,12 @@ class SimpleBitVector:
     def select(self, i, x):
         # TODO
         return 0
+
 class BitVector:
     def __init__(self, data):
         self.n = len(data)
-        self.data = data
-        self.cumsum = [0] + list(accumulate(data))
+        self.data = ar.array('b',data)
+        self.cumsum = ar.array('i',[0] + list(accumulate(data)))
     def access(self, i):
         return self.data[i]
     def rank(self, i, x):
@@ -43,7 +44,7 @@ class BitVector:
         while r-l > 1:
             m = (r+l)//2
             n = self.cumsum[m] if x else m - self.cumsum[m]
-            if n < i:
+            if n < i+1:
                 l = m
             else:
                 r = m
@@ -58,9 +59,9 @@ class WaveletMatrix:
         self.B = []
         self.cnt0 = []
         while th:
-            self.B.append(ar.array('b',((t&th)==th for t in self.T)))
+            self.B.append(BitVector(ar.array('b',((t&th)==th for t in self.T))))
             L,R = [],[]
-            for t,b in zip(self.T, self.B[-1]):
+            for t,b in zip(self.T, self.B[-1].data):
                 if b:
                     R.append(t)
                 else:
@@ -71,37 +72,26 @@ class WaveletMatrix:
         self.index = {}
         for i,t in enumerate(self.T[::-1]):
             self.index[t] = self.N-i-1
-    # return data[i]
     def access(self, i):
         res = 0
         th = 1 << self.l
         for c0, row in zip(self.cnt0,self.B):
-            if row[i]:
+            if row.access(i):
                 res += th
-                i = c0 + self._rank(row, i+1, 1) - 1
+                i = c0 + row.rank(i+1, 1) - 1
             else:
-                i = self._rank(row, i+1, 0) - 1 
+                i = row.rank(i+1, 0) - 1 
             th >>= 1
         return res
-
-    def _rank(self, row, i, x):
-        return row[:i].count(x)
-    def _select(self, row, i, x):
-        cnt = 0
-        for res, r in enumerate(row):
-            if r == x:
-                if cnt == i:
-                    return res
-                cnt += 1
     # count x in data[:i]
     def rank(self, i, x):
         i -= 1
         th = 1 << self.l
-        for c0, row in zip(self.cnt0,self.B):
+        for c0, row in zip(self.cnt0, self.B):
             if th&x:
-                i = c0 + self._rank(row, i+1, 1) - 1
+                i = c0 + row.rank(i+1, 1) - 1
             else:
-                i = self._rank(row, i+1, 0) - 1
+                i = row.rank(i+1, 0) - 1
             th >>= 1
         return i-self.index[x]+1
     # find i-th x (0-index)
@@ -110,25 +100,37 @@ class WaveletMatrix:
         th = 1
         for c0, row in zip(self.cnt0[::-1],self.B[::-1]):
             if x&th:
-                i = self._select(row, i-c0, 1)
+                i = row.select(i-c0, 1)
             else:
-                i = self._select(row, i, 0)
+                i = row.select(i, 0)
             th <<= 1
         return i
+    # find i-th value in [l,r)
     def quantile(self, l, r, i):
         th = 1 << self.l
         for c0, row in zip(self.cnt0,self.B):
-            n0 = self._rank(row,r,0) - self._rank(row,l,0)
-            n1 = self._rank(row,r,1) - self._rank(row,l,1)
+            n0 = row.rank(r,0) - row.rank(l,0)
+            n1 = row.rank(r,1) - row.rank(l,1)
             if n0 <= i:
                 i -= n0
-                l = c0+self._rank(row,l,1)
-                r = c0+self._rank(row,r,1)
+                l = c0+row.rank(l,1)
+                r = c0+row.rank(r,1)
             else:
-                l = self._rank(row,l,0)
-                r = self._rank(row,r,0)
+                l = row.rank(l,0)
+                r = row.rank(r,0)
             th >>= 1
         return self.T[r-1]
+
+    # deprecated
+    def _rank(self, row, i, x):
+        return row.data[:i].count(x)
+    def _select(self, row, i, x):
+        cnt = 0
+        for res, r in enumerate(row.data):
+            if r == x:
+                if cnt == i:
+                    return res
+                cnt += 1
 
 def test():
     print("- Test WaveletMatrix")
@@ -144,6 +146,7 @@ def test():
     print(wm.select(4,5),10)
     print(wm.select(0,3),9)
     print(wm.quantile(1,11,5),5)
+
 def test2():
     print("- Test SimpleBitVector")
     #       0,1,2,3,4,5,6,7
@@ -153,14 +156,14 @@ def test2():
     print(sbv.access(1),1)
     print(sbv.rank(5,0),2)
     print(sbv.rank(5,1),3)
-    print(sbv.select(1,0),2)
-    print(sbv.select(2,0),3)
-    print(sbv.select(3,0),7)
-    print(sbv.select(1,1),0)
-    print(sbv.select(2,1),1)
-    print(sbv.select(3,1),4)
-    print(sbv.select(4,1),5)
-    print(sbv.select(5,1),6)
+    print(sbv.select(0,0),2)
+    print(sbv.select(1,0),3)
+    print(sbv.select(2,0),7)
+    print(sbv.select(0,1),0)
+    print(sbv.select(1,1),1)
+    print(sbv.select(2,1),4)
+    print(sbv.select(3,1),5)
+    print(sbv.select(4,1),6)
 
 def perf():
     print("- Test Performance")
