@@ -35,8 +35,8 @@ class Treap2:
             self.sum = key
         def __str__(self):
             return f"{str(self.key)}->({self.l},{self.r})"
-    def __init__(self):
-        self.root = None
+    def __init__(self, t = None):
+        self.root = t
     def update(self, t):
         t.cnt = (t.r.cnt if t.r else 0) + (t.l.cnt if t.l else 0) + 1
         t.sum = (t.r.sum if t.r else 0) + (t.l.sum if t.l else 0) + t.key
@@ -62,15 +62,10 @@ class Treap2:
             t.r = s[0]
             return t, s[1]
     def insert(self, k):
-        if self.root is None:
-            self.root = self.Node(k)
-            return self
         lt, rt = self.split(self.root, k)
         self.root = self.merge(self.merge(lt, self.Node(k)), rt)
         return self
     def remove(self, k):
-        if self.root is None:
-            return
         lt,rt = self.split(self.root, k)
         _,rt = self.split(rt, k+1)
         self.root = self.merge(lt, rt)
@@ -82,6 +77,29 @@ class Treap2:
             if t.key == k:
                 return True
             t = t.r if t.key < k else t.l
+    def findEqualOrGreaterThan(self, x):
+        t = self.root
+        res = None
+        while True:
+            if t is None:
+                return res
+            if x <= t.key:
+                res = t.key
+                t = t.l
+            else:
+                t = t.r
+    def findEqualOrLessThan(self, x):
+        t = self.root
+        res = None
+        while True:
+            if t is None:
+                return res
+            if t.key <= x:
+                res = t.key
+                t = t.r
+            else:
+                t = t.l
+
 
     def show(self):
         from collections import deque
@@ -111,18 +129,29 @@ def test():
     trp.insert(5)
     trp.insert(10)
     trp.insert(20)
+    trp.insert(20)
     trp.insert(40)
     trp.insert(-10)
     trp.remove(20)
     trp.remove(10)
     trp.show()
+    print(trp.findEqualOrGreaterThan(4),5)
+    print(trp.findEqualOrGreaterThan(5),5)
+    print(trp.findEqualOrGreaterThan(6),40)
+    print(trp.findEqualOrGreaterThan(39),40)
+    print(trp.findEqualOrGreaterThan(40),40)
+    print(trp.findEqualOrGreaterThan(41),None)
+    print(trp.findEqualOrLessThan(39),5)
+    print(trp.findEqualOrLessThan(40),40)
+    print(trp.findEqualOrLessThan(41),40)
+
 
 def perf():
     print("---PERF")
     import random
     from time import perf_counter as time
     K = 10**9
-    N = 2*10**4
+    N = 2*10**5
     samples = [random.randint(-K,K) for _ in  range(N)]
 
     trp = Treap2()
@@ -138,8 +167,8 @@ def perf():
     print(f"{time() - start}")
 
     print(trp.root.cnt)
-    print(trp.root.l.cnt)
-    print(trp.root.r.cnt)
+    print(trp.root.l.cnt,trp.root.r.cnt)
+    print(trp.root.l.l.cnt,trp.root.l.r.cnt, trp.root.r.l.cnt,trp.root.r.r.cnt)
 
 if __name__=='__main__':
     test()
