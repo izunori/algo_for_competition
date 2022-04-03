@@ -1,31 +1,71 @@
-class Treap:
+class TreapTuple:
     # (key, priority, lch, rch)
     def __init__(self):
-        pass
-    def getPriority(self):
-        import random
-        return random.random()
-    def merge(self,l,r):
-        if l is None or r is None:
-            return l if r is None else r
-        if l[1] > r[1]:
-            l[2] = self.merge(l[2],r)
-            return l
+        self.root = None
+    def merge(self, a, b):
+        if a is None or b is None:
+            return a if b is None else b
+        if a[1] > b[1]:
+            a[3] = self.merge(a[3],b)
+            return self.update(a)
         else:
-            r[3] = self.merge(l,r[3])
-            return r
-    def split(self,t,k):
+            b[2] = self.merge(a,b[2])
+            return self.update(b)
+    def update(self, t):
+        t[4] = (t[3][4] if t[3] else 0) + (t[2][4] if t[2] else 0) + 1
+        t[5] = (t[3][5] if t[3] else 0) + (t[2][5] if t[2] else 0) + t[0]
+        return t
+    def split(self, t, k):
         if t is None:
-            return (None,None)
-        if t[0] <= k:
-            r = t[3]
-            return (t, self.split((t[3],k,r,b)))
+            return (None, None)
+        if k <= t[0]:
+            s = self.split(t[2], k)
+            t[2] = s[1]
+            return s[0], t
         else:
-            b = t
-            return (self.split(t[2],k,a,b[2], t))
+            s = self.split(t[3], k)
+            t[3] = s[0]
+            return t, s[1]
+    def insert(self, k):
+        lt, rt = self.split(self.root, k)
+        node = [k, random.random(), None, None, 1, k]
+        self.root = self.merge(self.merge(lt, node), rt)
+        return self
+    def remove(self, k):
+        lt,rt = self.split(self.root, k)
+        _,rt = self.split(rt, k+1)
+        self.root = self.merge(lt, rt)
+
+    def show(self):
+        from collections import deque
+        if self.root is None:
+            print(None)
+        dq = deque([self.root])
+        while dq:
+            t = dq.popleft()
+            vs = []
+            if t[2]:
+                dq.append(t[2])
+                vs.append(t[2][0])
+            else:
+                vs.append(None)
+            if t[3]:
+                dq.append(t[3])
+                vs.append(t[3][0])
+            else:
+                vs.append(None)
+            print(t[0],"->",vs)
+    def search(self, k):
+        t = self.root
+        while True:
+            if t is None:
+                return False
+            if t[0] == k:
+                return True
+            t = t[3] if t[0] < k else t[2]
 
 import random
-class Treap2:
+class Treap:
     class Node:
         def __init__(self, key):
             self.l, self.r = None, None
@@ -33,6 +73,7 @@ class Treap2:
             self.pri = random.random()
             self.cnt = 1
             self.sum = key
+            self.depth = 0
         def __str__(self):
             return f"{str(self.key)}->({self.l},{self.r})"
     def __init__(self, t = None):
@@ -46,9 +87,11 @@ class Treap2:
             return a if b is None else b
         if a.pri > b.pri:
             a.r = self.merge(a.r, b)
+            a.depth = max(a.depth, b.depth+1)
             return self.update(a)
         else:
             b.l = self.merge(a, b.l)
+            b.depth = max(b.depth, a.depth+1)
             return self.update(b)
     def split(self, t, k):
         if t is None:
@@ -125,7 +168,7 @@ class Treap2:
 
 def test():
     print("---TEST")
-    trp = Treap2()
+    trp = Treap()
     trp.insert(5)
     trp.insert(10)
     trp.insert(20)
@@ -135,6 +178,7 @@ def test():
     trp.remove(20)
     trp.remove(10)
     trp.show()
+    return 
     print(trp.findEqualOrGreaterThan(4),5)
     print(trp.findEqualOrGreaterThan(5),5)
     print(trp.findEqualOrGreaterThan(6),40)
@@ -154,7 +198,7 @@ def perf():
     N = 2*10**5
     samples = [random.randint(-K,K) for _ in  range(N)]
 
-    trp = Treap2()
+    trp = Treap()
 
     start = time()
     for s in samples:
@@ -169,6 +213,10 @@ def perf():
     print(trp.root.cnt)
     print(trp.root.l.cnt,trp.root.r.cnt)
     print(trp.root.l.l.cnt,trp.root.l.r.cnt, trp.root.r.l.cnt,trp.root.r.r.cnt)
+
+    print(trp.root.depth)
+    print(trp.root.l.depth,trp.root.r.depth)
+    print(trp.root.l.l.depth,trp.root.l.r.depth, trp.root.r.l.depth,trp.root.r.r.depth)
 
 if __name__=='__main__':
     test()
