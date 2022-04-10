@@ -81,8 +81,125 @@ class Treap:
     def update(self, t):
         t.cnt = (t.r.cnt if t.r else 0) + (t.l.cnt if t.l else 0) + 1
         t.sum = (t.r.sum if t.r else 0) + (t.l.sum if t.l else 0) + t.key
+        t.depth = max((t.r.depth if t.r else 0), (t.l.depth if t.l else 0))+1
         return t
     def merge(self, a, b):
+        if a is None or b is None:
+            return a if b is None else b
+        if a.pri > b.pri:
+            a.r = self.merge(a.r, b)
+            return self.update(a)
+        else:
+            b.l = self.merge(a, b.l)
+            return self.update(b)
+    def split(self, t, k):
+        if t is None:
+            return (None, None)
+        if k <= t.key:
+            s = self.split(t.l, k)
+            t.l = s[1]
+            return (s[0], t)
+        else:
+            s = self.split(t.r, k)
+            t.r = s[0]
+            return t, s[1]
+    def insert(self, k):
+        lt, rt = self.split(self.root, k)
+        self.root = self.merge(self.merge(lt, self.Node(k)), rt)
+        return self
+    def remove(self, k):
+        lt,rt = self.split(self.root, k)
+        _,rt = self.split(rt, k+1)
+        self.root = self.merge(lt, rt)
+    def search(self, k):
+        t = self.root
+        while True:
+            if t is None:
+                return False
+            if t.key == k:
+                return True
+            t = t.r if t.key < k else t.l
+    def findEqualOrGreaterThan(self, x):
+        t = self.root
+        res = None
+        while True:
+            if t is None:
+                return res
+            if x <= t.key:
+                res = t.key
+                t = t.l
+            else:
+                t = t.r
+    def findEqualOrLessThan(self, x):
+        t = self.root
+        res = None
+        while True:
+            if t is None:
+                return res
+            if t.key <= x:
+                res = t.key
+                t = t.r
+            else:
+                t = t.l
+
+    def show(self):
+        from collections import deque
+        if self.root is None:
+            print(None)
+        dq = deque([self.root])
+        while dq:
+            t = dq.popleft()
+            vs = []
+            if t.l:
+                dq.append(t.l)
+                vs.append(t.l.key)
+            else:
+                vs.append(None)
+            if t.r:
+                dq.append(t.r)
+                vs.append(t.r.key)
+            else:
+                vs.append(None)
+            print(t.key,"->",vs)
+
+class Treap2:
+    class Node:
+        def __init__(self, key):
+            self.l, self.r = None, None
+            self.key = key
+            self.pri = random.random()
+            self.cnt = 1
+            self.sum = key
+            self.depth = 0
+        def __str__(self):
+            return f"{str(self.key)}->({self.l},{self.r})"
+    def __init__(self, t = None):
+        self.root = t
+    def update(self, t):
+        t.cnt = (t.r.cnt if t.r else 0) + (t.l.cnt if t.l else 0) + 1
+        t.sum = (t.r.sum if t.r else 0) + (t.l.sum if t.l else 0) + t.key
+        t.depth = max((t.r.depth if t.r else 0), (t.l.depth if t.l else 0))+1
+        return t
+    def merge(self, a, b):
+        pairs = []
+        while not (a is None or b is None):
+            if a.pri > b.pri:
+                pairs.append((a,(a,b)))
+                a,b = a.r, b
+            else:
+                pairs.append((b,(a,b)))
+                a,b = a, b.l
+        t = a if b is None else b
+        for ab,(a,b) in pairs[::-1]:
+            self.update(t)
+            if ab == a:
+                a.r = t
+                t = a
+            else:
+                b.l = t
+                t = b
+        return self.update(t)
+
         if a is None or b is None:
             return a if b is None else b
         if a.pri > b.pri:
@@ -142,8 +259,6 @@ class Treap:
                 t = t.r
             else:
                 t = t.l
-
-
     def show(self):
         from collections import deque
         if self.root is None:
@@ -164,11 +279,9 @@ class Treap:
                 vs.append(None)
             print(t.key,"->",vs)
 
-
-
 def test():
     print("---TEST")
-    trp = Treap()
+    trp = Treap2()
     trp.insert(5)
     trp.insert(10)
     trp.insert(20)
@@ -178,7 +291,6 @@ def test():
     trp.remove(20)
     trp.remove(10)
     trp.show()
-    return 
     print(trp.findEqualOrGreaterThan(4),5)
     print(trp.findEqualOrGreaterThan(5),5)
     print(trp.findEqualOrGreaterThan(6),40)
@@ -189,7 +301,6 @@ def test():
     print(trp.findEqualOrLessThan(40),40)
     print(trp.findEqualOrLessThan(41),40)
 
-
 def perf():
     print("---PERF")
     import random
@@ -198,7 +309,7 @@ def perf():
     N = 2*10**5
     samples = [random.randint(-K,K) for _ in  range(N)]
 
-    trp = Treap()
+    trp = Treap2()
 
     start = time()
     for s in samples:
