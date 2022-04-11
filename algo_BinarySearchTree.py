@@ -12,6 +12,8 @@ class BinarySearchTree(BinaryIndexedTree):
         return self.get(x+1) - self.get(x)
     def erase(self, x):
         self.add(x, -1)
+    def count(self):
+        return self.get(self.max_size)
     def findLessThan(self, t, equal=True):
         t -= (not equal)
         s = self.get(t+1) # num of <= t

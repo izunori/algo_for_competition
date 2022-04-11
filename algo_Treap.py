@@ -65,7 +65,7 @@ class TreapTuple:
             t = t[3] if t[0] < k else t[2]
 
 import random
-class Treap:
+class TreapRecursive:
     class Node:
         def __init__(self, key):
             self.l, self.r = None, None
@@ -96,13 +96,11 @@ class Treap:
         if t is None:
             return (None, None)
         if k <= t.key:
-            s = self.split(t.l, k)
-            t.l = s[1]
-            return (s[0], t)
+            l,t.l = self.split(t.l, k)
+            return (l, t)
         else:
-            s = self.split(t.r, k)
-            t.r = s[0]
-            return t, s[1]
+            t.r,r = self.split(t.r, k)
+            return t, r
     def insert(self, k):
         lt, rt = self.split(self.root, k)
         self.root = self.merge(self.merge(lt, self.Node(k)), rt)
@@ -162,12 +160,21 @@ class Treap:
                 vs.append(None)
             print(t.key,"->",vs)
 
-class Treap2:
+## omake
+y = 2463534242
+def xorShift():
+    global y
+    y = y ^ ((y << 13) & 0xffffffff)
+    y = y ^ ((y >> 17) & 0xffffffff)
+    y = y ^ ((y << 5) & 0xffffffff)
+    return y
+
+class Treap:
     class Node:
         def __init__(self, key):
             self.l, self.r = None, None
             self.key = key
-            self.pri = random.random()
+            self.pri = xorShift()
             self.cnt = 1
             self.sum = key
             self.depth = 0
@@ -184,43 +191,39 @@ class Treap2:
         pairs = []
         while not (a is None or b is None):
             if a.pri > b.pri:
-                pairs.append((a,(a,b)))
+                pairs.append((True,a))
                 a,b = a.r, b
             else:
-                pairs.append((b,(a,b)))
+                pairs.append((False,b))
                 a,b = a, b.l
         t = a if b is None else b
-        for ab,(a,b) in pairs[::-1]:
+        while pairs:
+            is_a,x = pairs.pop()
             self.update(t)
-            if ab == a:
-                a.r = t
-                t = a
+            if is_a:
+                x.r,t = t,x
             else:
-                b.l = t
-                t = b
+                x.l,t = t,x
         return self.update(t)
-
-        if a is None or b is None:
-            return a if b is None else b
-        if a.pri > b.pri:
-            a.r = self.merge(a.r, b)
-            a.depth = max(a.depth, b.depth+1)
-            return self.update(a)
-        else:
-            b.l = self.merge(a, b.l)
-            b.depth = max(b.depth, a.depth+1)
-            return self.update(b)
     def split(self, t, k):
-        if t is None:
-            return (None, None)
-        if k <= t.key:
-            s = self.split(t.l, k)
-            t.l = s[1]
-            return (s[0], t)
-        else:
-            s = self.split(t.r, k)
-            t.r = s[0]
-            return t, s[1]
+        pairs = []
+        while t is not None:
+            if k <= t.key:
+                pairs.append((True,t))
+                t = t.l
+            else:
+                pairs.append((False,t))
+                t = t.r
+        s = (None, None)
+        while pairs:
+            is_l,t = pairs.pop()
+            if is_l:
+                l,t.l = s
+                s = (l,t)
+            else:
+                t.r,r = s
+                s = (t,r)
+        return s
     def insert(self, k):
         lt, rt = self.split(self.root, k)
         self.root = self.merge(self.merge(lt, self.Node(k)), rt)
@@ -236,29 +239,28 @@ class Treap2:
                 return False
             if t.key == k:
                 return True
-            t = t.r if t.key < k else t.l
+            t = (t.r if t.key < k else t.l)
     def findEqualOrGreaterThan(self, x):
         t = self.root
         res = None
-        while True:
-            if t is None:
-                return res
+        while t is not None:
             if x <= t.key:
                 res = t.key
                 t = t.l
             else:
                 t = t.r
+        return res
     def findEqualOrLessThan(self, x):
         t = self.root
         res = None
-        while True:
-            if t is None:
-                return res
+        while t is not None:
             if t.key <= x:
                 res = t.key
                 t = t.r
             else:
                 t = t.l
+        return res
+
     def show(self):
         from collections import deque
         if self.root is None:
@@ -281,7 +283,7 @@ class Treap2:
 
 def test():
     print("---TEST")
-    trp = Treap2()
+    trp = Treap()
     trp.insert(5)
     trp.insert(10)
     trp.insert(20)
@@ -309,7 +311,7 @@ def perf():
     N = 2*10**5
     samples = [random.randint(-K,K) for _ in  range(N)]
 
-    trp = Treap2()
+    trp = Treap()
 
     start = time()
     for s in samples:

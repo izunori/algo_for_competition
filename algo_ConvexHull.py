@@ -1,3 +1,16 @@
+from algo_BinarySearchTree import BinarySearchTreeWithCompressedData
+class ConvexHull:
+    def __init__(self, pts):
+        self.bst = BinarySearchTreeWithCompressedData(pts)
+        self.sx, self.sy = 0,0
+    def add(self, pt):
+        if self.bst.count() < 3:
+            self.bst.insert(pt)
+            self.sx += pt[0]
+            self.sy += pt[1]
+            return
+        
+
 def Graham(pts):
     if len(pts) == 1:
         return pts
@@ -38,6 +51,9 @@ def test():
             ]
     ch = Graham(pts)
     print(ch)
+    ch = ConvexHull(pts)
+    for pt in pts:
+        ch.add(pt)
 
 if __name__=='__main__':
     test()
