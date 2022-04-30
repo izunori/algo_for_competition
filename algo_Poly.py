@@ -15,7 +15,18 @@ def polyInv(f, r=-1, MOD=998244353):
 def polyDiff(f,MOD=998244353):
     return [(n*a)%MOD for n,a in enumerate(f[1:], 1)]
 
+def polyDiv(f, g, MOD=998244353):
+    n,m = len(f),len(g)
+    if n < m:
+        return 0,f
+    nnt = NNT(MOD)
+    q = nnt.polymul(f[::-1], polyInv(g[::-1],n))[n-m::-1]
+    gq = nnt.polymul(g,q[:m-1])
+    r = [(a-b)%MOD for a,b in zip(f,gq[:m-1])]
+    return q,r
+
 def test():
+    print("--test Inversion")
     import random
     MOD = 998244353
     K = 100
@@ -32,10 +43,32 @@ def test():
         print(f,r)
 
 def testDiff():
+    print("--test Diff")
     f = [2,3,4,5]
     ans = [3,8,15]
     res = polyDiff(f)
     print(res==ans)
+
+def testDiv():
+    print("--test Division")
+    import random
+    random.seed(1)
+    MOD = 998244353
+    N = 100
+    M = random.randint(1,N)
+    M = 1
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    g = [random.randint(0,MOD-1) for _ in range(M)]
+    q,r = polyDiv(f,g)
+    nnt = NNT(MOD)
+    gq = nnt.polymul(g,q)
+    for i,x in enumerate(r):
+        gq[i] = (gq[i]+x)%MOD
+    for x,y in zip(f,gq):
+        if x%MOD!=y%MOD:
+            print('NG')
+            return
+    print('OK')
 
 def perf():
     from time import perf_counter as time
@@ -52,4 +85,6 @@ def perf():
 if __name__=='__main__':
     test()
     testDiff()
+    testDiv()
+
 
