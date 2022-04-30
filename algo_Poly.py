@@ -12,11 +12,30 @@ def polyInv(f, r=-1, MOD=998244353):
         m *= 2
     return g[:r]
 
+def polyDiff(f,MOD=998244353):
+    return [(n*a)%MOD for n,a in enumerate(f[1:], 1)]
+
 def test():
-    f = [3,-2,3,-400,5,6]
-    g = polyInv(f)
+    import random
+    MOD = 998244353
+    K = 100
+    N = random.randint(1,K)
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    r = random.randint(N,K)
+    g = polyInv(f,r)
     nnt = NNT(998244353)
-    print(nnt.polymul(f,g))
+    ans = [1]+[0]*(r-1)
+    res = nnt.polymul(f,g)[:r]
+    if ans == res:
+        print('OK')
+    else:
+        print(f,r)
+
+def testDiff():
+    f = [2,3,4,5]
+    ans = [3,8,15]
+    res = polyDiff(f)
+    print(res==ans)
 
 def perf():
     from time import perf_counter as time
@@ -32,5 +51,5 @@ def perf():
 
 if __name__=='__main__':
     test()
-    perf()
+    testDiff()
 

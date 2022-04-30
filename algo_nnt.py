@@ -30,7 +30,11 @@ class NNT:
                    j = j|rb
                 b,rb = b<<1,rb>>1
             self.rev[i],self.rev[j] = j,i
-    def nnt(self,A,k,tws):
+    def nnt(self,A,k):
+        return self._nnt(A,k,self.ws)
+    def innt(self,A,k):
+        return self._nnt(A,k,self.iws)
+    def _nnt(self,A,k,tws):
         n = len(A)
         step = self.maxL // (2**k)
         res = [A[i] for i in self.rev[::step]]
@@ -56,9 +60,9 @@ class NNT:
         f = f+[0]*(l-nf)
         g = g+[0]*(l-ng)
         def _polymul(u,v,k):
-            U = self.nnt(u, k, self.ws)
-            V = self.nnt(v, k, self.ws)
-            UV = self.nnt([(u*v)%self.MOD for u,v in zip(U,V)], k, self.iws)
+            U = self.nnt(u, k)
+            V = self.nnt(v, k)
+            UV = self.innt([(u*v)%self.MOD for u,v in zip(U,V)], k)
             l = 2**k
             il = pow(l, self.MOD-2, self.MOD)
             return [(x*il)%self.MOD for x in UV]
