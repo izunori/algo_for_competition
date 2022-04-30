@@ -20,11 +20,11 @@ def multiPointEval(f, xs, MOD=998244353):
     i = 0
     while tree:
         f = res[i]
-        left = tree.pop()
         right = tree.pop()
-        _,r = polyDiv(f, left)
-        res.append(r)
+        left = tree.pop()
         _,r = polyDiv(f, right)
+        res.append(r)
+        _,r = polyDiv(f, left)
         res.append(r)
         i += 1
     res = [x[0] for x in res[-1:-n-1:-1]]
@@ -33,7 +33,7 @@ def multiPointEval(f, xs, MOD=998244353):
 def test():
     MOD = 998244353
     f = [1,2,3,2,5]
-    xs = [-1,-2,-3,-4,-5,-6,-7,-8]
+    xs = [-1,-2,-3]
     ys = multiPointEval(f, xs, MOD)
     def F(x):
         res,xn = 0,1
@@ -41,15 +41,15 @@ def test():
             res = (res+a*xn)%MOD
             xn *= x
         return res
-    print(ys)
-    print([F(x) for x in xs])
+    print("result : ",ys)
+    print("ans :" ,[F(x) for x in xs])
 
 def perf():
     import random
     from time import perf_counter as time
     MOD = 998244353
     N = 10
-    M = 100
+    M = 10
     f = [random.randint(0,MOD-1) for _ in range(N)]
     xs = [random.randint(0,MOD-1) for _ in range(M)]
     start = time()

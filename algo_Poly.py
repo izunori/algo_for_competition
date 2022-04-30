@@ -16,6 +16,8 @@ def polyDiff(f,MOD=998244353):
     return [(n*a)%MOD for n,a in enumerate(f[1:], 1)]
 
 def polyDiv(f, g, MOD=998244353):
+    while g[-1] == 0 : # TODO Refact
+        g.pop()
     n,m = len(f),len(g)
     if n < m:
         return 0,f
@@ -52,11 +54,9 @@ def testDiff():
 def testDiv():
     print("--test Division")
     import random
-    random.seed(1)
     MOD = 998244353
-    N = 100
+    N = 5
     M = random.randint(1,N)
-    M = 1
     f = [random.randint(0,MOD-1) for _ in range(N)]
     g = [random.randint(0,MOD-1) for _ in range(M)]
     q,r = polyDiv(f,g)

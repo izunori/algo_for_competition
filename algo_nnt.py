@@ -34,7 +34,7 @@ class NNT:
         return self._nnt(A,k,self.ws)
     def innt(self,A,k):
         return self._nnt(A,k,self.iws)
-    def _nnt(self,A,k,tws):
+    def _nnt(self,A,k,tws): # len(A) = 2**k
         n = len(A)
         step = self.maxL // (2**k)
         res = [A[i] for i in self.rev[::step]]
