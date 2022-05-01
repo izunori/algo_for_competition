@@ -33,6 +33,14 @@ def LaglangeInterporation(xs,ys,MOD=998244353):
         res = nres
     return res[0][0]
 
+def poly(x,g,MOD=998244353):
+    res = 0
+    nx = 1
+    for a in g:
+        res += a*nx
+        nx *= x
+    return res % MOD
+
 def test():
     MOD = 998244353
     xs = [0,-1,-3,1,23]
@@ -41,17 +49,21 @@ def test():
     print(ys)
     g = LaglangeInterporation(xs,ys)
     print(g)
-    def h(x):
-        res = 0
-        nx = 1
-        for a in g:
-            res += a*nx
-            nx *= x
-        return res % MOD
-    print([h(x) for x in xs])
+    print([poly(x,g) for x in xs])
+
+def perf():
+    import random
+    from time import perf_counter as time
+    MOD = 998244353
+    N = 10
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    xs = [random.randint(0,MOD-1) for _ in range(N)]
+    ys = [poly(x,f) for x in xs]
+    start = time()
+    LaglangeInterporation(xs,ys)
+    print(f"{time() - start}")
 
 if __name__=='__main__':
-    test()
-
-
+    #test()
+    perf()
 
