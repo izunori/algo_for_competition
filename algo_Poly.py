@@ -1,5 +1,11 @@
 from algo_nnt import NNT
-def polyInv(f, r=-1, MOD=998244353):
+def polyInv(f,r=-1,MOD=998244353):
+    assert f[0] != 0
+    r = r if r > 0 else len(f)
+    if r <= 2750 or len(f) <= 600:
+        return polyInvSimple(f,r,MOD)
+    return polyInvNNT(f,r,MOD)
+def polyInvNNT(f, r=-1, MOD=998244353):
     r = r if r > 0 else len(f)
     f = f + [0]*(r-len(f))
     g = [pow(f[0],MOD-2,MOD)]
@@ -11,6 +17,16 @@ def polyInv(f, r=-1, MOD=998244353):
         g = g + ng[:m]
         m *= 2
     return g[:r]
+def polyInvSimple(f,r=-1,MOD=998244353):
+    assert f[0] != 0
+    r = r if r > 0 else len(f)
+    g = [0]*r
+    g[0] = pow(f[0],MOD-2,MOD)
+    for n in range(1,r):
+        for i in range(1,min(n+1,len(f))):
+            g[n] = (g[n]+f[i]*g[n-i])%MOD
+        g[n] = (-g[n]*g[0])%MOD
+    return g
 
 def polyDiff(f,MOD=998244353):
     return [(n*a)%MOD for n,a in enumerate(f[1:], 1)]
@@ -27,11 +43,11 @@ def polyDiv(f, g, MOD=998244353):
     r = [(a-b)%MOD for a,b in zip(f,gq[:m-1])]
     return q,r
 
-def test():
+def testInv():
     print("--test Inversion")
     import random
     MOD = 998244353
-    K = 100
+    K = random.randint(100,200)
     N = random.randint(1,K)
     f = [random.randint(0,MOD-1) for _ in range(N)]
     r = random.randint(N,K)
@@ -43,6 +59,28 @@ def test():
         print('OK')
     else:
         print(f,r)
+
+def perfInv():
+    print("--perf Inversion")
+    import random
+    from time import perf_counter as time
+    MOD = 998244353
+    N = 2*10**3
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    r = N
+
+    start = time()
+    g1 = polyInvNNT(f,r)
+    print(f"{time() - start}")
+
+    start = time()
+    g2 = polyInvSimple(f,r)
+    print(f"{time() - start}")
+
+    start = time()
+    g2 = polyInv(f,r)
+    print(f"{time() - start}")
+    print(g1==g2)
 
 def testDiff():
     print("--test Diff")
@@ -70,21 +108,30 @@ def testDiv():
             return
     print('OK')
 
-def perf():
-    from time import perf_counter as time
+def perfDiv():
+    print("--perf Division")
     import random
-    MOD = 998244353
-    N = 10**5
+    from time import perf_counter as time
+
+    MOD=998244353
+    N = 2*10**5
+    M = N//2
     f = [random.randint(0,MOD-1) for _ in range(N)]
-    start = time()
-    g = polyInv(f)
-    #nnt = NNT()
-    #print(nnt.polymul(f,g)[:N])
-    print(f"{time() - start}")
+    g = [random.randint(0,MOD-1) for _ in range(M)]
+
+    start=time()
+    q,r=polyDiv(f,g,MOD)
+    print(f"{time()-start}") 
+
 
 if __name__=='__main__':
-    test()
-    testDiff()
+    #testInv()
+    #testInv() # JIT
+    #testInv() # JIT
+    #testInv() # JIT
+    #testInv() # JIT
+    #testDiff()
     testDiv()
-
+    #perfInv()
+    perfDiv()
 

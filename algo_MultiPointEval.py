@@ -48,7 +48,7 @@ def perf():
     import random
     from time import perf_counter as time
     MOD = 998244353
-    N = 10
+    N = 100
     M = 10
     f = [random.randint(0,MOD-1) for _ in range(N)]
     xs = [random.randint(0,MOD-1) for _ in range(M)]
