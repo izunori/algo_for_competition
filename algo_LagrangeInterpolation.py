@@ -33,6 +33,33 @@ def LaglangeInterporation(xs,ys,MOD=998244353):
         res = nres
     return res[0][0]
 
+class LaglangeInterporationWithArith:
+    def __init__(self,xs,ys,MOD=998244353):
+        self.xs = xs
+        self.ys = ys
+        self.MOD = MOD
+        n = len(xs)
+        a = (xs[1]-xs[0])
+        fact = [1]
+        for i in range(1,n):
+            fact.append((fact[-1]*i)%MOD)
+        self.ds = []
+        an1 = pow(a,n-1,MOD)
+        sign = 1 if n&1 else -1
+        for i in range(n):
+            t = sign*an1*fact[i]*fact[n-i-1]
+            self.ds.append(pow(t,MOD-2,MOD))
+            sign *= -1
+    def get(self,c):
+        nom,MOD = 1,self.MOD
+        for x in self.xs:
+            nom = (nom*(c-x))%MOD
+        ns = [nom*pow(c-x,MOD-2,MOD) for x in self.xs]
+        res = 0
+        for t in ((((y*n)%MOD)*d)%MOD for y,n,d in zip(self.ys,ns,self.ds)):
+            res = (res+t)%MOD
+        return res
+
 def poly(x,g,MOD=998244353):
     res = 0
     nx = 1
@@ -51,6 +78,16 @@ def test():
     print(g)
     print([poly(x,g) for x in xs])
 
+def testArith():
+    MOD = 998244353
+    xs = [0,2,4,6]
+    f = lambda x: 2-3*x+x**2+10*x**3
+    ys = [f(x)%MOD for x in xs]
+    lag = LaglangeInterporationWithArith(xs,ys)
+    print(f(10),lag.get(10))
+    print(f(-10)%MOD,lag.get(-10))
+
+
 def perf():
     import random
     from time import perf_counter as time
@@ -65,5 +102,6 @@ def perf():
 
 if __name__=='__main__':
     #test()
-    perf()
+    #perf()
+    testArith()
 
