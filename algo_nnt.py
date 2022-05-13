@@ -1,5 +1,6 @@
 from time import perf_counter as time
 import pypyjit
+import array as ar
 pypyjit.set_param('max_unroll_recursion=-1')
 
 # ntt
@@ -12,11 +13,11 @@ class NNT:
         self.maxK = 21
         self.maxL = 2**self.maxK # 2**19 > 4*10**5
         self.ws = [31] # 31**(2**23) = 1 mod 998244353
-        for i in range(24):
+        for i in range(23):
             self.ws.append(pow(self.ws[-1],2,self.MOD))
         self.ws.reverse() # ws[i]**(2**i) = 1 mod
         self.iws = [pow(31,self.MOD-2,self.MOD)]
-        for i in range(24):
+        for i in range(23):
             self.iws.append(pow(self.iws[-1],2,self.MOD))
         self.iws.reverse()
         self.rev = [0]*self.maxL
@@ -40,12 +41,10 @@ class NNT:
         n = len(A)
         step = self.maxL // (2**k)
         res = [A[i] for i in self.rev[::step]]
-        r,MOD = 1,self.MOD
-        #r,MOD = 2,self.MOD
-        #for i in range(0,n,2):
-            #res[i],res[i+1] = (res[i]+res[i+1])%MOD,(res[i]-res[i+1])%MOD
-        #for w in tws[3:k+2]:
-        for w in tws[2:k+2]:
+        r,MOD = 2,self.MOD
+        for i in range(0,n,2):
+            res[i],res[i+1] = (res[i]+res[i+1])%MOD,(res[i]-res[i+1])%MOD
+        for w in tws[2:k+1]:
             for l in range(0,n,r*2):
                 wi = 1
                 for i in range(l,l+r):
@@ -61,7 +60,11 @@ class NNT:
         step = self.maxL//(2**k)
         rev = self.rev[::step]
         till = 1
-        for w in self.ws[2:k+2]:
+        for i in range(0,n//2):
+            A[i],A[i+r] = (A[i]+A[i+r])%MOD,(A[i]-A[i+r])%MOD
+        till *= 2
+        r //= 2
+        for w in self.ws[2:k+1]:
             wi = 1
             for l in rev[:till]:
                 for i in range(l,l+r):
@@ -77,7 +80,7 @@ class NNT:
         rev = self.rev[::step]
         r,MOD = 1,self.MOD
         till = n//2
-        for w in self.iws[k+1:1:-1]:
+        for w in self.iws[k:1:-1]:
             wi = 1
             for l in rev[:till]:
                 for i in range(l,l+r):
@@ -85,6 +88,8 @@ class NNT:
                 wi = (wi*w) % MOD
             r *= 2
             till //= 2
+        for i in range(n//2):
+            A[i],A[i+r] = (A[i]+A[i+r])%MOD,(A[i]-A[i+r])%MOD
     def polymul(self,f,g):
         if len(f)+len(g) <= 256 or max(len(f),len(g)) <= 128:
             return self.polymul_simple(f,g)
@@ -111,14 +116,14 @@ class NNT:
         m = nf+ng-1
         k = (m-1).bit_length()
         l = 2**k
-        f = [x % self.MOD for x in f]+[0]*(l-nf)
-        g = [x % self.MOD for x in g]+[0]*(l-ng)
+        f = ar.array('i',[x % self.MOD for x in f]+[0]*(l-nf))
+        g = ar.array('i',[x % self.MOD for x in g]+[0]*(l-ng))
         start = time()
         self.nnt2(f),self.nnt2(g)
         print(f"nnt2:{time() - start}")
         #print(f)
         il = pow(l, self.MOD-2, self.MOD)
-        UV = [(u*v)%self.MOD for u,v in zip(f,g)]
+        UV = ar.array('i',[(u*v)%self.MOD for u,v in zip(f,g)])
         self.innt2(UV)
         return [(x*il)%self.MOD for x in UV[:m]]
 
@@ -151,7 +156,7 @@ def test_perf():
     from time import perf_counter as time
     import random
     MOD = 998244353
-    N = 10**6
+    N = 2*10**5
     M = MOD
     f = [random.randint(0,M-1) for i in range(N)]
     g = [random.randint(0,M-1) for i in range(N)]
