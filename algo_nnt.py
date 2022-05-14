@@ -31,51 +31,34 @@ class NNT:
                    j = j|rb
                 b,rb = b<<1,rb>>1
             self.rev[i],self.rev[j] = j,i
-    def nnt(self,A): # len(A) must be 2**k
-        k = len(A).bit_length() - 1
-        return self._nnt(A,k,self.ws)
-    def innt(self,A):
-        k = len(A).bit_length() - 1
-        return self._nnt(A,k,self.iws)
-    def _nnt(self,A,k,tws): # len(A) = 2**k
-        n = len(A)
-        step = self.maxL // (2**k)
-        res = [A[i] for i in self.rev[::step]]
-        r = 2
-        for i in range(0,n,2):
-            res[i],res[i+1] = (res[i]+res[i+1])%MOD,(res[i]-res[i+1])%MOD
-        for w in tws[2:k+1]:
-            for l in range(0,n,r*2):
-                wi = 1
-                for i in range(l,l+r):
-                    t = res[i+r]*wi
-                    res[i],res[i+r] = (res[i]+t)%MOD,(res[i]-t)%MOD
-                    wi *= w
-                    wi %= MOD
-            r *= 2
-        return res
-    def nnt2(self,A): # len(A) = 2**k
+    def nnt(self,A): # len(A) = 2**k
         n = len(A)
         k = n.bit_length()-1
         m,r = 1<<(k-1),1
-        for w in self.ws[k:0:-1]:
+        for w in self.ws[k:1:-1]:
             for i in range(0,n,2*m):
                 wi = 1
                 for j in range(m):
                     A[i+j],A[i+j+m],wi = (A[i+j]+A[i+j+m])%MOD,(A[i+j]-A[i+j+m])*wi%MOD,wi*w%MOD
             m,r = m//2,r*2
-    def innt2(self,A): # len(A) = 2**k
+        for i in range(0,n,2): # expand for performance (take modulo in innt)
+            A[i],A[i+1] = (A[i]+A[i+1]),(A[i]-A[i+1])
+    def innt(self,A): # len(A) = 2**k
         n = len(A)
         k = (n-1).bit_length()
-        m,r = 1,1<<(k-1)
-        for w in self.iws[1:k+1]:
+        for i in range(0,n,2): # expand for performance
+            A[i],A[i+1] = (A[i]+A[i+1]),(A[i]-A[i+1])
+        if k < 2:
+            return
+        m,r = 2,1<<(k-2)
+        for w in self.iws[2:k+1]:
             for i in range(0,n,2*m):
                 wi = 1
                 for j in range(m):
                     A[i+j],A[i+j+m],wi = (A[i+j]+A[i+j+m]*wi)%MOD,(A[i+j]-A[i+j+m]*wi)%MOD,wi*w%MOD
             m,r = m*2,r//2
     def polymul(self,f,g):
-        if len(f)+len(g) <= 256 or max(len(f),len(g)) <= 128:
+        if len(f)+len(g) <= 512 or min(len(f),len(g)) <= 32:
             return self.polymul_simple(f,g)
         else:
             return self.polymul_nnt(f,g)
@@ -85,27 +68,13 @@ class NNT:
         m = nf+ng-1
         k = (m-1).bit_length()
         l = 2**k
-        f = [x % MOD for x in f]+[0]*(l-nf)
-        g = [x % MOD for x in g]+[0]*(l-ng)
-        start = time()
-        U = self.nnt(f)
-        V = self.nnt(g)
-        il = pow(l, MOD-2, MOD)
-        UV = self.innt([(u*v)%MOD for u,v in zip(U,V)])[:m]
-        return [(x*il)%MOD for x in UV]
-    def polymul_nnt2(self,f,g):
-        nf = len(f)
-        ng = len(g)
-        m = nf+ng-1
-        k = (m-1).bit_length()
-        l = 2**k
         f = ar.array('i',[x % MOD for x in f]+[0]*(l-nf))
         g = ar.array('i',[x % MOD for x in g]+[0]*(l-ng))
-        self.nnt2(f)
-        self.nnt2(g)
+        self.nnt(f)
+        self.nnt(g)
         il = pow(l, MOD-2, MOD)
         UV = ar.array('i',[(u*v)%MOD for u,v in zip(f,g)])
-        self.innt2(UV)
+        self.innt(UV)
         return [(x*il)%MOD for x in UV[:m]]
 
     def polymul_simple(self,f,g):
@@ -134,6 +103,7 @@ class NNT:
         return res
 
 def test_perf():
+    print("--perf--")
     from time import perf_counter as time
     import random
     MOD = 998244353
@@ -147,12 +117,6 @@ def test_perf():
     fg1 = nnt.polymul_nnt(f,g)
     print(f'nnt:{time()-start}s')
 
-    start = time()
-    fg2 = nnt.polymul_nnt2(f,g)
-    print(f'nnt2:{time()-start}s')
-
-    print(fg1==fg2)
-
     if N < 2**14:
         start = time()
         fg1 = nnt.polymul_simple(f,g)
@@ -161,29 +125,30 @@ def test_perf():
 def test_perf_compare():
     from time import perf_counter as time
     import random
-    MOD = 998244353
-    N = 2*10**5
-    M = MOD # looks good in <= 2*10**6
     nnt = NNT()
-    r = 128
-    nf = N-r
-    ng = r
-    f = [random.randint(0,M-1) for i in range(nf)]
-    g = [random.randint(0,M-1) for i in range(ng)]
+    N = 512
+    #for r in range(10):
+        #r = 2**r
+    for r in range(0,N,N//10):
+        nf = N-r
+        ng = r
+        f = [random.randint(0,MOD-1) for i in range(nf)]
+        g = [random.randint(0,MOD-1) for i in range(ng)]
 
-    start = time()
-    fg1 = nnt.polymul_nnt(f,g)
-    t1=time()-start
+        start = time()
+        fg1 = nnt.polymul_nnt(f,g)
+        t1=time()-start
 
-    start = time()
-    fg2 = nnt.polymul_simple(f,g)
-    t2=time()-start
-    if t1<t2:
-        print(f"nnt:{nf},{ng},{t1,t2}")
-    else:
-        print(f"grd:{nf},{ng},{t1,t2}")
+        start = time()
+        fg2 = nnt.polymul_simple(f,g)
+        t2=time()-start
+        if t1<t2:
+            print(f"nnt:{nf},{ng},{t1,t2}")
+        else:
+            print(f"grd:{nf},{ng},{t1,t2}")
 
 def test_polymul():
+    print("--test--")
     MOD = 998244353
     from time import perf_counter as time
     import random
@@ -194,9 +159,7 @@ def test_polymul():
     f = [random.randint(0,M) for i in range(N0)]
     g = [random.randint(0,M) for i in range(N1)]
     nnt = NNT()
-    start = time()
-    fg = nnt.polymul_nnt2(f,g)
-    print(f'{time()-start}s')
+    fg = nnt.polymul_nnt(f,g)
     ans = nnt.polymul_simple(f,g)
     if fg == ans:
         print('OK')
@@ -206,12 +169,5 @@ def test_polymul():
 if __name__=='__main__':
     test_polymul()
     test_perf()
-    test_perf()
-    test_perf()
-    test_perf()
-    test_perf()
-    test_perf()
-    test_perf()
-    test_perf()
-    #test_perf_compare()
+    test_perf_compare()
 
