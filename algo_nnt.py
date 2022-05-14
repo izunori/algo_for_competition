@@ -11,29 +11,14 @@ class NNT:
         if MOD != 998244353:
             assert "mod must be 998244353 in my nnt"
         self.maxK = 21
-        self.maxL = 2**self.maxK # 2**19 > 4*10**5
-        self.ws = [31] # 31**(2**23) = 1 mod 998244353
-        for i in range(23):
-            self.ws.append(pow(self.ws[-1],2,MOD))
-        self.ws.reverse() # ws[i]**(2**i) = 1 mod
-        self.iws = [pow(31,MOD-2,MOD)]
-        for i in range(23):
-            self.iws.append(pow(self.iws[-1],2,MOD))
-        self.iws.reverse()
-        self.rev = [0]*self.maxL
-        for i in range(1,self.maxL):
-            if self.rev[i]:
-                continue
-            b,rb = 1,1<<(self.maxK-1)
-            j = 0
-            for _ in range(self.maxK):
-                if (i&b):
-                   j = j|rb
-                b,rb = b<<1,rb>>1
-            self.rev[i],self.rev[j] = j,i
+        self.maxL = 2**self.maxK # 2**21 > 10**6
+        # 31**(2**23) = 1 mod 998244353
+        self.ws = [pow(31,2**i,MOD) for i in range(23,-1,-1)]
+        self.iws = [pow(w,MOD-2,MOD) for w in self.ws]
     def nnt(self,A): # len(A) = 2**k
         n = len(A)
         k = n.bit_length()-1
+        if k < 1: return
         m,r = 1<<(k-1),1
         for w in self.ws[k:1:-1]:
             for i in range(0,n,2*m):
@@ -45,10 +30,13 @@ class NNT:
             A[i],A[i+1] = (A[i]+A[i+1]),(A[i]-A[i+1])
     def innt(self,A): # len(A) = 2**k
         n = len(A)
+        ni = pow(n, MOD-2, MOD)
         k = (n-1).bit_length()
+        if k < 1: return
         for i in range(0,n,2): # expand for performance
             A[i],A[i+1] = (A[i]+A[i+1]),(A[i]-A[i+1])
         if k < 2:
+            A[0],A[1] = A[0]*ni%MOD,A[1]*ni%MOD
             return
         m,r = 2,1<<(k-2)
         for w in self.iws[2:k+1]:
@@ -57,6 +45,9 @@ class NNT:
                 for j in range(m):
                     A[i+j],A[i+j+m],wi = (A[i+j]+A[i+j+m]*wi)%MOD,(A[i+j]-A[i+j+m]*wi)%MOD,wi*w%MOD
             m,r = m*2,r//2
+        for i in range(n):
+            A[i] = A[i]*ni%MOD
+
     def polymul(self,f,g):
         if len(f)+len(g) <= 512 or min(len(f),len(g)) <= 32:
             return self.polymul_simple(f,g)
@@ -67,16 +58,17 @@ class NNT:
         ng = len(g)
         m = nf+ng-1
         k = (m-1).bit_length()
-        l = 2**k
-        f = ar.array('i',[x % MOD for x in f]+[0]*(l-nf))
-        g = ar.array('i',[x % MOD for x in g]+[0]*(l-ng))
+        n = 2**k
+        f = ar.array('i',[x % MOD for x in f]+[0]*(n-nf))
+        g = ar.array('i',[x % MOD for x in g]+[0]*(n-ng))
         self.nnt(f)
         self.nnt(g)
-        il = pow(l, MOD-2, MOD)
-        UV = ar.array('i',[(u*v)%MOD for u,v in zip(f,g)])
-        self.innt(UV)
-        return [(x*il)%MOD for x in UV[:m]]
+        for i,(x,y) in enumerate(zip(f,g)):
+            f[i] = x*y%MOD
+        self.innt(f)
+        return list(f)[:m]
 
+    # for validation
     def polymul_simple(self,f,g):
         n,m = len(f),len(g)
         ans = [0]*(n+m-1)
@@ -84,7 +76,6 @@ class NNT:
             for j in range(m):
                 ans[i+j] = (ans[i+j]+f[i]*g[j]) % MOD
         return ans
-
     def _nnt_recur(self,A,k,tws):
         if k == 0:
             return A
@@ -106,7 +97,6 @@ def test_perf():
     print("--perf--")
     from time import perf_counter as time
     import random
-    MOD = 998244353
     N = 10**6
     M = MOD
     f = [random.randint(0,M-1) for i in range(N)]
@@ -158,6 +148,8 @@ def test_polymul():
     M = MOD
     f = [random.randint(0,M) for i in range(N0)]
     g = [random.randint(0,M) for i in range(N1)]
+    f = [1]
+    g = [1,2]
     nnt = NNT()
     fg = nnt.polymul_nnt(f,g)
     ans = nnt.polymul_simple(f,g)
@@ -165,9 +157,11 @@ def test_polymul():
         print('OK')
     else:
         print('NG')
+        print("f,g=",f,g)
+        print("fg,ans=",fg,ans)
 
 if __name__=='__main__':
     test_polymul()
     test_perf()
-    test_perf_compare()
+    #test_perf_compare()
 
