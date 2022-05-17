@@ -17,34 +17,31 @@ class NNT:
         self.iws = [pow(w,MOD-2,MOD) for w in self.ws]
     def nnt(self,A): # len(A) = 2**k
         n = len(A)
+        if n == 1:return
         k = n.bit_length()-1
-        if k < 1: return
-        m,r = 1<<(k-1),1
+        r = 1<<(k-1)
         for w in self.ws[k:1:-1]:
-            for i in range(0,n,2*m):
+            for i in range(0,n,2*r):
                 wi = 1
-                for j in range(m):
-                    A[i+j],A[i+j+m],wi = (A[i+j]+A[i+j+m])%MOD,(A[i+j]-A[i+j+m])*wi%MOD,wi*w%MOD
-            m,r = m//2,r*2
+                for j in range(r):
+                    A[i+j],A[i+j+r],wi = (A[i+j]+A[i+j+r])%MOD,(A[i+j]-A[i+j+r])*wi%MOD,wi*w%MOD
+            r = r//2
         for i in range(0,n,2): # expand for performance (take modulo in innt)
             A[i],A[i+1] = (A[i]+A[i+1]),(A[i]-A[i+1])
     def innt(self,A): # len(A) = 2**k
         n = len(A)
-        ni = pow(n, MOD-2, MOD)
+        if n == 1:return
         k = (n-1).bit_length()
-        if k < 1: return
         for i in range(0,n,2): # expand for performance
             A[i],A[i+1] = (A[i]+A[i+1]),(A[i]-A[i+1])
-        if k < 2:
-            A[0],A[1] = A[0]*ni%MOD,A[1]*ni%MOD
-            return
-        m,r = 2,1<<(k-2)
+        r = 2
         for w in self.iws[2:k+1]:
-            for i in range(0,n,2*m):
+            for i in range(0,n,2*r):
                 wi = 1
-                for j in range(m):
-                    A[i+j],A[i+j+m],wi = (A[i+j]+A[i+j+m]*wi)%MOD,(A[i+j]-A[i+j+m]*wi)%MOD,wi*w%MOD
-            m,r = m*2,r//2
+                for j in range(r):
+                    A[i+j],A[i+j+r],wi = (A[i+j]+A[i+j+r]*wi)%MOD,(A[i+j]-A[i+j+r]*wi)%MOD,wi*w%MOD
+            r = r*2
+        ni = pow(n, MOD-2, MOD)
         for i in range(n):
             A[i] = A[i]*ni%MOD
 
