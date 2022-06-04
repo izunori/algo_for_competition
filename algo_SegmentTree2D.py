@@ -137,7 +137,6 @@ class SegmentTree2D:
             print(*[self.data[p+i] for i in range(2*self.W)])
             p += 2*self.W
 
-
 def test():
     H = 2
     W = 4
@@ -161,6 +160,37 @@ def test():
                     if not res:
                         print(x0,y0,x1,y1,ans,seg.get(x0,y0,x1,y1),res)
 
+def perf():
+    import random
+    from time import perf_counter as time
+    H = 100
+    W = 100
+    K = 10**9
+    A = [[random.randint(0,K) for j in range(W)] for i in range(H)]
+    add = lambda x,y:x+y
+    seg = SegmentTree2D(A, add, 0)
+    N = 2*10**5
+    samples_set = [
+            (random.randint(0,H), random.randint(0,W), random.randint(0,K))
+            for i in range(N)
+        ]
+    start=time()
+    for x,y,v in samples_set:
+        seg.set(x,y,v)
+    print(f"set : {time()-start}") 
+
+    samples_get = [
+            sorted([random.randint(0,H),random.randint(0,H)])
+            + sorted([random.randint(0,W),random.randint(0,W)])
+            for i in range(N)
+            ]
+    start=time()
+    for x0,x1,y0,y1 in samples_get:
+        seg.get(x0,y0,x1,y1)
+    print(f"get : {time()-start}") 
+
+
 if __name__=='__main__':
     test()
+    perf()
 
