@@ -26,7 +26,7 @@ def GaussianElimination(G):
                     G[h2][w2] = (G[h2][w2] - G[h2][w]*cache[w2]) % MOD
 
 # return the number of x which satisfies Ax=b
-def num_of_sol(A,b):
+def dimOfSolveSpace(A,b):
     for row,s in zip(A,b):
         row.append(s)
 
@@ -56,7 +56,7 @@ def testNoSolution():
             [ 6, 4, -8],
         ]
     b = [1, 14, 3]
-    n = num_of_sol(A,b)
+    n = dimOfSolveSpace(A,b)
     print(f"{n}=={-1}")
 
 def perf():
