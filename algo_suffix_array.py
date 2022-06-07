@@ -69,21 +69,21 @@ def LongestCommonPrefixArray(S, sa):
     rank = [0]*(N+1)
     for i,s in enumerate(sa):
         rank[s] = i
-    s0 = S
-    s1 = S[sa[rank[0]-1]:]
+    s0 = 0
+    s1 = sa[rank[0]-1]
     h = 0
-    for c0,c1 in zip(s0,s1):
-        if c0==c1:
+    for i in range(N-s1):
+        if S[i+s0]==S[i+s1]:
             h += 1
         else:
             break
     lcp = [h]
     for i in range(1,N):
         h = max(0,h-1)
-        s0 = S[i+h:]
-        s1 = S[sa[rank[i]-1]+h:]
-        for c0,c1 in zip(s0,s1):
-            if c0==c1:
+        s0 = i+h
+        s1 = sa[rank[i]-1]+h
+        for i in range(N-s1):
+            if S[i+s0]==S[i+s1]:
                 h += 1
             else:
                 break
@@ -102,9 +102,11 @@ def test():
     print(res)
     print(res2)
     print(lcp)
+    print([0, 1, 4, 1, 1, 0, 3, 0, 0, 0, 2])
     print(res == res2)
+    print(lcp == [0, 1, 4, 1, 1, 0, 3, 0, 0, 0, 2])
 
-    S = 'a'*20
+    S = 'a'*20+'b'*20
     res = ManberMyers(S)
     res2 = for_test(S)
     lcp = LongestCommonPrefixArray(S, res)
@@ -119,18 +121,23 @@ def perf():
     import string
     import random
 
-    N = 10**4
-    S = "".join(random.choices(string.ascii_letters, k=N))
+    N = 10**6
+    #S = "".join(random.choices(string.ascii_letters, k=N))
     #S = "a"*N
+    S = "a"*(N//2)+"b"*(N//2)
 
     start = time()
-    r = ManberMyers(S)
+    sa = ManberMyers(S)
     print(f'{time()-start}s')
 
     start = time()
-    r2 = for_test(S)
+    lcp = LongestCommonPrefixArray(S,sa)
     print(f'{time()-start}s')
+
+    #start = time()
+    #r2 = for_test(S)
+    #print(f'{time()-start}s')
 
 if __name__=='__main__':
     test()
-    #perf()
+    perf()
