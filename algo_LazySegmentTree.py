@@ -22,7 +22,6 @@ class LazySegmentTree:
         self.history = []
         for i in range(self.L-1,0,-1):
             self.data[i] = op(self.data[2*i], self.data[2*i+1])
-
     def upper(self,l,r):
         l,r = l>>1, r>>1
         res = []
@@ -37,7 +36,6 @@ class LazySegmentTree:
             res.append(l)
             l >>= 1
         return res
-
     def update(self,u):
         if not self.lazy[u] == self.lazy_default:
             if u < self.L:
@@ -46,7 +44,6 @@ class LazySegmentTree:
                 self.lazy[2*u+1] = self.lazy_op(up, self.lazy[2*u+1])
             self.data[u] = self.eval_(self.lazy[u], self.data[u])
             self.lazy[u] = self.lazy_default
-
     def set(self,i,j,f):
         i += self.L
         j += self.L
@@ -74,7 +71,6 @@ class LazySegmentTree:
             self.update(2*u)
             self.update(2*u+1)
             self.data[u] = self.op(self.data[2*u], self.data[2*u+1])
-
     def update_uppers(self,p):
         uppers = []
         while self.updated[p] == 0 and p > 0:
@@ -85,7 +81,6 @@ class LazySegmentTree:
             self.update(u)
             self.updated[u] = 1
             self.history.append(u)
-
     def get(self,i,j):
         i += self.L
         j += self.L
