@@ -1,5 +1,72 @@
 from collections import defaultdict, deque
 import heapq as hq
+class Graph:
+    def __init__(self,N):
+        self.g = [{} for _ in range(N+1)]
+    def add(self,u,v,cap,cost):
+        self.g[u][v] = [cap, cost]
+        self.g[v][u] = [0, -cost]
+    def get(self):
+        return self.g
+
+# only plus capacity
+def minimumCost3(g,s,t,f):
+    res = 0
+    flow = 0
+    inf = 2**64
+    E = sum(len(vs) for vs in g)
+    first = True
+    while True:
+        cost = [inf]*len(g)
+        cost[s] = 0
+        p = [-inf]*len(g)
+        ptn = [0]*len(g)
+        if first:
+            for i in range(E):
+                update = False
+                for v in range(len(g)):
+                    for nv,(c,d) in g[v].items():
+                        if c > 0 and cost[v] + d < cost[nv]:
+                            update = True
+                            cost[nv] = cost[v] + d
+                            p[nv] = v
+                if not update:
+                    break
+            else:
+                return inf # closed loop
+            first = False
+        else:
+            h = [(0,s)]
+            cost[s] = 0
+            while h:
+                d,v = hq.heappop(h)
+                if cost[v] < d:
+                    continue
+                for nv,(nc,nd) in g[v].items():
+                    nd += ptn[v] - ptn[nv]
+                    if nc > 0 and cost[v]+nd < cost[nv]:
+                        cost[nv] = cost[v]+nd
+                        hq.heappush(h,(cost[nv],nv))
+                        p[nv] = v
+        if cost[t] == inf:
+            return -1
+        for v in range(len(g)):
+            cost[v] += ptn[v] - ptn[s]
+            ptn[v] += cost[v]
+        route = [t]
+        while route[-1] != s:
+            route.append(p[route[-1]])
+        tf = min(g[v][nv][0] for v,nv in zip(route[1:],route))
+        if flow + tf >= f:
+            res += cost[t]*(f-flow)
+            return res
+        else:
+            res += cost[t]*tf
+            flow += tf
+        for v,nv in zip(route[1:],route):
+            g[v][nv][0] -= tf
+            g[nv][v][0] += tf
+
 # only plus capacity
 def minimumCost2(g,s,t,f):
     res = 0
@@ -78,11 +145,9 @@ def minimumCost(g,s,t,f):
                         p[nv] = v
         if cost[t] == inf:
             return -1
-
         for v in cost:
             cost[v] += ptn[v] - ptn[s]
             ptn[v] += cost[v]
-
         route = [t]
         while route[-1] != s:
             route.append(p[route[-1]])
@@ -118,11 +183,13 @@ def test():
 
     g = defaultdict(dict)
     g2 = defaultdict(dict)
+    g3 = Graph(300)
     for s,t,cp,cs in UVCC:
         g[s][t] = [cp,cs]
         g[t][s] = [0,-cs]
         g2[s][t] = [cp,cs]
         g2[t][s] = [0,-cs]
+        g3.add(s,t,cp,cs)
 
     start = time()
     f = minimumCost(g,1,V,F)
@@ -135,9 +202,15 @@ def test():
     print(f)
 
     start = time()
+    f = minimumCost3(g3.get(),1,V,F)
+    print(f"{time() - start}s")
+    print(f)
+
+    start = time()
     fc, _ = nx.network_simplex(G)
     print(f"{time() - start}s")
     print(fc)
+
 
 def test2():
     UVCC = [
