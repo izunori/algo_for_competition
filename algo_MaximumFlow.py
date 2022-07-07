@@ -149,34 +149,41 @@ def EdmondsKarp(graph,capacity,start,terminal):
     return flow 
 
 def test():
-    # sample : https://www.geeksforgeeks.org/ford-fulkerson-algorithm-for-maximum-flow-problem/
-    UVC = [
-            (0,1,16),
-            (0,2,13),
-            (1,2,10),
-            (2,1,4),
-            (1,3,12),
-            (3,2,9),
-            (2,4,14),
-            (4,3,7),
-            (3,5,20),
-            (4,5,4)
-            ]
+    from time import perf_counter as time
+    import random
+    import networkx as nx
+
+    V = 500
+    UVCC = []
+    G = nx.DiGraph()
+
+    for u in range(1,V+1):
+        for v in range(u+1,V+1):
+            c = random.randint(0,10)
+            UVCC.append((u,v,c))
+            G.add_edge(u,v,capacity=c)
+
     g = defaultdict(dict)
-    g2 = defaultdict(list)
-    cap = defaultdict(int)
-    gr = MaximumFlow(21)
-    for u,v,c in UVC:
-        g[u][v] = c
-        g[v][u] = 0
-        g2[u].append(v)
-        g2[v].append(u)
-        cap[(u,v)] = c
-        gr.add(u,v,c)
-    print(FordFulkerson(g,0,5), 23)
-    print(FordFulkerson2(g2,cap,0,5), 23)
-    print(EdmondsKarp(g,cap,0,5), 23)
-    print(gr.maxFlow(0,5))
+    gc = MaximumFlow(V+1)
+    for s,t,c in UVCC:
+        g[s][t] = c
+        g[t][s] = -c
+        gc.add(s,t,c)
+
+    start=time()
+    f = FordFulkerson(g,1,V)
+    print(f"gc:{time()-start}") 
+    print(f)
+
+    start=time()
+    f = gc.maxFlow(1,V)
+    print(f"gc:{time()-start}") 
+    print(f)
+
+    start=time()
+    f,g = nx.maximum_flow(G,1,V)
+    print(f"nx:{time()-start}") 
+    print(f)
 
 if __name__=='__main__':
     test()
