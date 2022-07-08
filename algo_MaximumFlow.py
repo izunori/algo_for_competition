@@ -11,7 +11,7 @@ class MaximumFlow:
         self.g[u].append(v)
         self.g[v].append(u)
         self.c[u][v] = c # Be careful about multiple edges
-        self.c[v][u] = -c
+        self.c[v][u] = 0
     def bfs(self,s):
         dq = deque([s])
         self.d = [self.inf]*self.N
@@ -167,7 +167,7 @@ def test():
 
     for u in range(1,V+1):
         for v in range(u+1,V+1):
-            c = random.randint(0,10)
+            c = random.randint(0,100)
             UVCC.append((u,v,c))
             G.add_edge(u,v,capacity=c)
 
@@ -175,7 +175,7 @@ def test():
     gc = MaximumFlow(V+1)
     for s,t,c in UVCC:
         g[s][t] = c
-        g[t][s] = -c
+        g[t][s] = 0
         gc.add(s,t,c)
 
     start=time()
