@@ -34,13 +34,12 @@ class MaximumFlow:
             if i == len(self.g[v]):
                 continue
             nv = self.g[v][i]
-            if not (self.c[v][nv] > 0 and self.d[v] < self.d[nv]):
+            if self.index[v]+1 < len(self.g[v]):
                 self.index[v] += 1
                 st.append((v,self.index[v]))
+            if not (self.c[v][nv] > 0 and self.d[v] < self.d[nv]):
                 continue
             p[nv] = v
-            self.index[v] += 1
-            st.append((v,self.index[v]))
             st.append((nv,self.index[nv]))
         else:
             return 0
@@ -161,13 +160,13 @@ def test():
     import random
     import networkx as nx
 
-    V = 500
+    V = 100
     UVCC = []
     G = nx.DiGraph()
 
     for u in range(1,V+1):
         for v in range(u+1,V+1):
-            c = random.randint(0,100)
+            c = random.randint(0,3)
             UVCC.append((u,v,c))
             G.add_edge(u,v,capacity=c)
 
@@ -179,19 +178,23 @@ def test():
         gc.add(s,t,c)
 
     start=time()
-    f = FordFulkerson(g,1,V)
+    f1 = FordFulkerson(g,1,V)
     print(f"gc:{time()-start}") 
-    print(f)
+    print(f1)
 
     start=time()
-    f = gc.maxFlow(1,V)
+    f2 = gc.maxFlow(1,V)
     print(f"gc:{time()-start}") 
-    print(f)
+    print(f2)
 
     start=time()
-    f,g = nx.maximum_flow(G,1,V)
+    f3,g = nx.maximum_flow(G,1,V)
     print(f"nx:{time()-start}") 
-    print(f)
+    print(f3)
+
+    if not (f1==f2==f3):
+        print("NG")
+        exit()
 
 if __name__=='__main__':
     test()
