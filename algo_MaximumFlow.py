@@ -1,4 +1,5 @@
 from collections import defaultdict, deque
+from time import perf_counter as time
 
 class MaximumFlow:
     def __init__(self, N):
@@ -24,17 +25,23 @@ class MaximumFlow:
                     self.d[nv] = self.d[v]+1
                     dq.append(nv)
     def dfs(self,s,t):
-        st = [s]
+        st = [(s,self.index[s])]
         p = [-1]*self.N
         while st:
-            v = st.pop()
+            v,i = st.pop()
             if v == t:
                 break
-            for nv in self.g[v]:
-                if not (self.c[v][nv] > 0 and self.d[v] < self.d[nv]):
-                    continue
-                p[nv] = v
-                st.append(nv)
+            if i == len(self.g[v]):
+                continue
+            nv = self.g[v][i]
+            if not (self.c[v][nv] > 0 and self.d[v] < self.d[nv]):
+                self.index[v] += 1
+                st.append((v,self.index[v]))
+                continue
+            p[nv] = v
+            self.index[v] += 1
+            st.append((v,self.index[v]))
+            st.append((nv,self.index[nv]))
         else:
             return 0
         route = [t]
@@ -53,6 +60,7 @@ class MaximumFlow:
             self.bfs(s)
             if self.d[t] == self.inf:
                 return flow
+            self.index = [0]*self.N
             while True:
                 f = self.dfs(s,t)
                 if f > 0:
