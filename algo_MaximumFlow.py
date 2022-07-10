@@ -45,8 +45,7 @@ class MaximumFlow:
             return 0
         route = [t]
         while route[-1] != s:
-            t = p[t]
-            route.append(t)
+            route.append(p[route[-1]])
         route.reverse()
         f = min(self.c[u][v] for u,v in zip(route,route[1:]))
         for u,v in zip(route,route[1:]):
