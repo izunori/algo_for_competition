@@ -64,6 +64,7 @@ class Treap:
             else:
                 t.r,r = s
                 s = (t,r)
+            self.update(t)
         return s
     def insert(self, k):
         lt, rt = self.split(self.root, k)
@@ -73,6 +74,13 @@ class Treap:
         lt,rt = self.split(self.root, k)
         _,rt = self.split(rt, k+1)
         self.root = self.merge(lt, rt)
+    def findIndex(self, k):
+        lt, rt = self.split(self.root, k)
+        rlt, rrt = self.split(rt, k+1)
+        index = lt.cnt if lt else 0
+        cnt = rlt.cnt if rlt else 0
+        self.root = self.merge(lt, self.merge(rlt, rrt))
+        return index, cnt
     def search(self, k):
         t = self.root
         while True:
@@ -81,38 +89,6 @@ class Treap:
             if t.key == k:
                 return True
             t = (t.r if t.key < k else t.l)
-    def findEqualOrGreaterThan(self, x):
-        t = self.root
-        res = None
-        while t is not None:
-            if x <= t.key:
-                res = t.key
-                t = t.l
-            else:
-                t = t.r
-        return res
-    def findEqualOrLessThan(self, x):
-        t = self.root
-        res = None
-        while t is not None:
-            if t.key <= x:
-                res = t.key
-                t = t.r
-            else:
-                t = t.l
-        return res
-    def findGreaterKth(self,x,k):
-        _,rt = self.split(self.root, k)
-        c = 0
-        nk = k
-        while c < k:
-            lt,rt = self.split(rt,nk+1)
-            if rt is None:
-                return None
-            if lt is not None:
-                c += lt.cnt
-            nk += 1
-        return nk-1
     def findKthSmallest(self,k,than=None): # 0-index
         if than is None:
             x = self.root
@@ -184,15 +160,6 @@ def test():
     trp.remove(20)
     trp.remove(10)
     trp.show() # -10,5,40
-    print(trp.findEqualOrGreaterThan(4),5)
-    print(trp.findEqualOrGreaterThan(5),5)
-    print(trp.findEqualOrGreaterThan(6),40)
-    print(trp.findEqualOrGreaterThan(39),40)
-    print(trp.findEqualOrGreaterThan(40),40)
-    print(trp.findEqualOrGreaterThan(41),None)
-    print(trp.findEqualOrLessThan(39),5)
-    print(trp.findEqualOrLessThan(40),40)
-    print(trp.findEqualOrLessThan(41),40)
     print(trp.findKthSmallest(0),-10)
     print(trp.findKthSmallest(1,5),40)
 
@@ -209,35 +176,58 @@ def perf():
     start = time()
     for s in samples:
         trp.insert(s)
-    print(f"{time() - start}")
+    print(f"insert : {time() - start}")
 
     start = time()
     for s in samples:
         trp.search(s)
-    print(f"{time() - start}")
+    print(f"search : {time() - start}")
 
-    print(trp.root.cnt)
-    print(trp.root.l.cnt,trp.root.r.cnt)
-    print(trp.root.l.l.cnt,trp.root.l.r.cnt, trp.root.r.l.cnt,trp.root.r.r.cnt)
+    #print(trp.root.cnt)
+    #print(trp.root.l.cnt,trp.root.r.cnt)
+    #print(trp.root.l.l.cnt,trp.root.l.r.cnt, trp.root.r.l.cnt,trp.root.r.r.cnt)
 
-    print(trp.root.depth)
-    print(trp.root.l.depth,trp.root.r.depth)
-    print(trp.root.l.l.depth,trp.root.l.r.depth, trp.root.r.l.depth,trp.root.r.r.depth)
+    #print(trp.root.depth)
+    #print(trp.root.l.depth,trp.root.r.depth)
+    #print(trp.root.l.l.depth,trp.root.l.r.depth, trp.root.r.l.depth,trp.root.r.r.depth)
 
 def testRandom():
     import random
-    N = 100
-    K = 100
-    samples = [random.randint(-K,K) for i in range(N)]
+    N = 10
+    M = 2
+    K = 10
+    samples = [random.randint(0,K) for i in range(N)]
+    toBeDeleted = random.sample(samples, k=M)
+    ans = sorted(samples)
+    #for x in toBeDeleted:
+    #    ans.remove(x)
+
     treap = Treap()
     for s in samples:
         treap.insert(s)
-    samples.sort()
-    for i,s in enumerate(samples):
-        a = treap.findKthSmallestRecursive(i+1)
-        b = treap.findKthSmallest(i)
-        if len(set([a,b,s])) > 1:
-            print("ERROR")
+    #for s in toBeDeleted:
+        #treap.remove(s)
+    
+    print(ans)
+
+    for s in set(ans):
+        index = ans.index(s)
+        cnt = ans.count(s)
+        if (index, cnt) != treap.findIndex(s):
+            print(s,index,cnt,treap.findIndex(s))
+            print('NG in findIndex')
+            break
+    else:
+        print('OK in findIndex')
+
+    for i in range(len(ans)):
+        if treap.findKthSmallest(i) != ans[i]:
+            print(i,treap.findKthSmallest(i),ans[i])
+            print('NG in findKth')
+            break
+    else:
+        print('OK in findKth')
+
 
 def testPerf():
     import random
@@ -247,9 +237,14 @@ def testPerf():
     samples = [random.randint(-K,K) for i in range(N)]
     ks = [random.randint(1,10) for i in range(N)]
     treap = Treap()
+
+    start = time()
     for s in samples:
         treap.insert(s)
+    print(f"insert : {time() - start}")
+
     samples.sort()
+
     start = time()
     for k in ks:
         treap.findKthSmallestRecursive(k)
@@ -261,7 +256,7 @@ def testPerf():
     print(f"{time() - start}")
 
 if __name__=='__main__':
-    #testRandom()
     #testPerf()
     test()
-    #perf()
+    testRandom()
+    perf()

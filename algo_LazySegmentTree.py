@@ -228,12 +228,8 @@ def test4():
     print(seg.findMinimumLessThan(0,8,lambda x : x < 1122))
     print(    [seg.get(i,i+1) for i in range(8)])
 
-
-
 if __name__ == '__main__':
     #test()
     test2()
     #est4()
-
-
 
