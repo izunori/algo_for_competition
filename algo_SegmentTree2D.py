@@ -163,8 +163,8 @@ def test():
 def perf():
     import random
     from time import perf_counter as time
-    H = 100
-    W = 100
+    H = 1000
+    W = 1000
     K = 10**9
     A = [[random.randint(0,K) for j in range(W)] for i in range(H)]
     add = lambda x,y:x+y
