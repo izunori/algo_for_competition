@@ -17,25 +17,28 @@ def nCr(n,r):
 def notAdjacentList(bs):
     n = len(bs)
     m = sum(bs)
-    dp = [[0]*m for _ in range(n+1)]
-    dp[0][0] = 1
+    dp,ndp = [0]*m, [0]*m
+    dp[0] = 1
     gap = 1
     for i in range(n):
         b = bs[i]
-        for ad in range(gap-i): # adjacent
-            rest = gap-ad
-            for k in range(1,min(gap,b)+1): # insert
+        for k in range(1,min(gap,b)+1): # insert
+            s = nCr(b-1,k-1)
+            for ad in range(gap-i): # adjacent
+                rest = gap-ad
                 inc_ad = b-k
-                s = nCr(b-1,k-1)
                 for dec_ad in range(min(k,ad)+1): # insert and split
-                    dp[i+1][ad+inc_ad-dec_ad] += dp[i][ad] * s * nCr(ad,dec_ad) * nCr(rest,k-dec_ad)
+                    ndp[ad+inc_ad-dec_ad] += dp[ad] * s * nCr(ad,dec_ad) * nCr(rest,k-dec_ad)
         gap += b
-    return dp[n][0]
+        dp,ndp = ndp,dp
+        for i in range(m):
+            ndp[i] = 0
+    return dp[0]
 
 
 def test():
     from itertools import permutations
-    bs = [3,2,3,2]
+    bs = [2,2,2,2,2]
     cs = "".join(str(i)*n for i,n in enumerate(bs))
     ans = set()
     for p in permutations(cs):
