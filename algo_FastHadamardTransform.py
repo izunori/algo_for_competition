@@ -7,7 +7,7 @@ def FastWalshHadamardTransform(a):
     k = (len(a) - 1).bit_length()
     a += [0]*(2**k - len(a))
     h = 1
-    while h < len(a):
+    for _ in range(k):
         for i in range(0,len(a),h*2):
             for j in range(i,i+h):
                 a[j],a[j+h] = (a[j]+a[j+h])%MOD,(a[j]-a[j+h])%MOD
@@ -26,6 +26,19 @@ def xorConv(X,Y):
     ik = pow(pow(2,MOD-2,MOD),k,MOD)
     for i in range(len(X)):
         X[i] = (X[i]*ik) % MOD
+    return X
+
+def xorConv2(X,Y):
+    k = max((len(X)-1).bit_length(), (len(Y)-1).bit_length())
+    X += [0]*(2**k - len(X))
+    Y += [0]*(2**k - len(Y))
+    FastWalshHadamardTransform(X)
+    FastWalshHadamardTransform(Y)
+    for i in range(len(X)):
+        X[i] *= Y[i]
+    FastWalshHadamardTransform(X)
+    for i in range(len(X)):
+        X[i] >>= k
     return X
 
 def test():
