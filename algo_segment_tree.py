@@ -97,6 +97,19 @@ def test2():
     print(seg.findMinimumLessThan(2,6,lambda x : x >= 5))
     print(seg.findMinimumLessThan(2,6,lambda x : x >= 6))
 
+def perf():
+    import random
+    from time import perf_counter as time
+    N,M = 2*10**5, 2*10**5
+    samples = [random.randint(0,10) for i in range(M)]
+    indexes = [random.randint(0,N-1) for i in range(M)]
+    data = [0]*N
+    seg = SegmentTree(data, lambda x,y:x+y, 0)
+    start=time()
+    for i,s in zip(indexes, samples):
+        seg.set(i,s)
+    print(f"{time()-start}") 
+    
 
 if __name__ == '__main__':
-    test2()
+    perf()
