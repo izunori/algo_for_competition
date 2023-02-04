@@ -67,44 +67,6 @@ class BinarySearchTreeWithCompressedData(BinarySearchTree):
             val = self.org_data[val]
         return val
 
-class BinarySearchTree2:
-    def __init__(self,max_size=10**6):
-        self.max_size = max_size
-        self.bit = BinaryIndexedTree([0]*max_size, lambda x,y:x+y, 0)
-    def insert(self,x):
-        # 0 <= x < max_size
-        self.bit.add(x,1)
-    def erase(self,x):
-        self.bit.add(x,-1)
-    def find(self,x):
-        return self.bit.get(x) != self.bit.get(x+1)
-    # return <=t
-    def findEqualOrLessThan(self,t):
-        s = self.bit.get(t+1) # num of <= t
-        if s == 0:
-            return None
-        R,L = t, -1
-        while R-L>1:
-            x = (R+L)//2
-            if s == self.bit.get(x+1):
-                R = x
-            else:
-                L = x
-        return R 
-    # return t<=
-    def findEqualOrGreaterThan(self,t):
-        s = self.bit.get(t) # num of < t
-        if s == self.bit.get(self.max_size):
-            return None
-        L,R = t-1, self.max_size
-        while R-L>1:
-            x = (L+R)//2
-            if s == self.bit.get(x+1):
-                L = x
-            else:
-                R = x
-        return L+1
-
 class ForTest:
     def __init__(self):
         self.data = []
@@ -126,64 +88,6 @@ class ForTest:
         return None
 
 def test():
-    print("-- Test Vanilla mode")
-    bst = BinarySearchTree(100)
-    bst.insert(0)
-    bst.insert(10)
-    bst.insert(20)
-    bst.insert(99)
-    print(bst.find(9),0)
-    print(bst.find(10),1)
-    print(bst.find(11),0)
-    print(bst.find(99),1)
-    print(bst.findLessThan(0, equal=False),None)
-    print(bst.findLessThan(0),0)
-    print(bst.findLessThan(5),0)
-    print(bst.findLessThan(10),10)
-    print(bst.findLessThan(10, equal=False),0)
-    print(bst.findGreaterThan(15),20)
-    print(bst.findGreaterThan(10),10)
-    print(bst.findGreaterThan(20),20)
-    print(bst.findGreaterThan(30),99)
-    print(bst.findGreaterThan(99), 99)
-    print(bst.findGreaterThan(99, equal=False),None)
-    print(bst.findLessThan(0),0)
-    print(bst.findLessThan(1),0)
-    print(bst.findLessThan(99),99)
-    print(bst.findGreaterThan(0),0)
-    print(bst.findGreaterThan(98),99)
-    print(bst.findGreaterThan(99),99)
-
-def testComp():
-    print("-- Test comp mode")
-    bst = BinarySearchTreeWithCompressedData([0,20,10,99])
-    bst.insert(0)
-    bst.insert(10)
-    bst.insert(20)
-    bst.insert(99)
-    print(bst.find(9),0)
-    print(bst.find(10),1)
-    print(bst.find(11),0)
-    print(bst.find(99),1)
-    print(bst.findLessThan(0, equal=False),None)
-    print(bst.findLessThan(0),0)
-    print(bst.findLessThan(5),0)
-    print(bst.findLessThan(10),10)
-    print(bst.findLessThan(10, equal=False),0)
-    print(bst.findGreaterThan(15),20)
-    print(bst.findGreaterThan(10),10)
-    print(bst.findGreaterThan(20),20)
-    print(bst.findGreaterThan(30),99)
-    print(bst.findGreaterThan(99), 99)
-    print(bst.findGreaterThan(99, equal=False),None)
-    print(bst.findLessThan(0),0)
-    print(bst.findLessThan(1),0)
-    print(bst.findLessThan(99),99)
-    print(bst.findGreaterThan(0),0)
-    print(bst.findGreaterThan(98),99)
-    print(bst.findGreaterThan(99),99)
-
-def randomTest():
     import random
     N = 10**3
     K = 100
@@ -227,7 +131,5 @@ def randomTest():
 
 if __name__=='__main__':
     test()
-    testComp()
-    randomTest()
 
     
