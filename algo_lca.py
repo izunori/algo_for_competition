@@ -9,7 +9,6 @@ class LCA:
         self.g = g
         self.GN = GN
         self.pv = pv
-
         # ancester
         self.parent = [0]*(self.N+1)
         for p,cs in g.items():
@@ -31,7 +30,6 @@ class LCA:
                 if self.depth[nv] == -1:
                     self.depth[nv] = self.depth[v] + 1
                     dq.append(nv)
-
     def find(self,u,v):
         if self.depth[u] > self.depth[v]:
             u,v = v,u
@@ -69,7 +67,6 @@ class LCA2:
                     l.append(-v)
                     l.append(nv)
         self.seg = SegmentTree([(self.depth[v],v) for v in self.euler], min, (self.inf,self.inf))
-
     def find(self, u,v):
         s,t = sorted([self.inn[u],self.inn[v]])
         _, c = self.seg.get(s,t+1)
