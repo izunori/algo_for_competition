@@ -18,12 +18,12 @@ class BinarySearchTree(BinaryIndexedTree):
         s = self.get(t) # num of <= t
         if s == 0:
             return None
-        R,L = t, -1
+        L,R = -1, t 
         while R-L>1:
             x = (R+L)//2
             L,R = (L,x) if s == self.get(x) else (x,R)
         return R 
-    def findGreaterThan(self, t):
+    def findGreaterOrEqualThan(self, t):
         s = self.get(t) # num of < t
         if s == self.get(self.max_size):
             return None
@@ -32,40 +32,6 @@ class BinarySearchTree(BinaryIndexedTree):
             x = (L+R)//2
             L,R = (x,R) if s == self.get(x) else (L,x)
         return R
-
-class BinarySearchTreeWithCompressedData(BinarySearchTree):
-    def __init__(self, data):
-        self.org_data = sorted(set(data))
-        self.comp = {x:i for i,x in enumerate(self.org_data)}
-        super().__init__(len(self.org_data))
-    def insert(self, x):
-        super().insert(self.comp[x])
-    def erase(self, x):
-        super().erase(self.comp[x])
-    def find(self, x):
-        if not x in self.comp:
-            return 0
-        return super().find(self.comp[x])
-    def findLessThan(self, t, equal=True):
-        if not t in self.comp:
-            i = bisect.bisect_left(self.org_data, t) - 1
-            equal = True
-        else:
-            i = self.comp[t]
-        val = super().findLessThan(i, equal=equal)
-        if val is not None:
-            val = self.org_data[val]
-        return val
-    def findGreaterThan(self, t, equal=True):
-        if not t in self.comp:
-            i = bisect.bisect_left(self.org_data, t)
-            equal = True
-        else:
-            i = self.comp[t]
-        val = super().findGreaterThan(i, equal=equal)
-        if val is not None:
-            val = self.org_data[val]
-        return val
 
 class ForTest:
     def __init__(self):
@@ -76,27 +42,27 @@ class ForTest:
         self.data.remove(x)
     def find(self,x):
         return self.data.count(x)
-    def findLessThan(self,t,equal=True):
+    def findLessOrEqualThan(self,t):
         for x in self.data[::-1]:
-            if (equal and x <= t) or (not equal and x < t):
+            if x <= t:
                 return x
         return None
-    def findGreaterThan(self,t,equal=True):
+    def findGreaterOrEqualThan(self,t):
         for x in self.data:
-            if (equal and x >= t) or (not equal and x > t):
+            if t <= x:
                 return x
         return None
 
 def test():
     import random
     N = 10**3
-    K = 100
+    K = 10000
     M = 100
     for _ in range(N):
-        samples = [random.randint(-K,K) for _ in range(M)]
-        queries = [random.randint(-K,K) for _ in range(M)]
+        samples = [random.randint(0,K) for _ in range(M)]
+        queries = [random.randint(0,K) for _ in range(M)]
         t0 = ForTest()
-        t1 = BinarySearchTreeWithCompressedData(samples)
+        t1 = BinarySearchTree(K+1)
         for s,q in zip(samples, queries):
             t0.insert(s)
             t1.insert(s)
@@ -104,11 +70,11 @@ def test():
                 print(t0.find(q),t1.find(q))
                 print("ERROR")
                 exit()
-            if t0.findLessThan(q) != t1.findLessThan(q):
+            if t0.findLessOrEqualThan(q) != t1.findLessOrEqualThan(q):
                 print(t0.find(q),t1.find(q))
                 print("ERROR")
                 exit()
-            if t0.findGreaterThan(q) != t1.findGreaterThan(q):
+            if t0.findGreaterOrEqualThan(q) != t1.findGreaterOrEqualThan(q):
                 print(t0.find(q),t1.find(q))
                 print("ERROR")
                 exit()
