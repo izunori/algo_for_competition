@@ -285,7 +285,10 @@ int main(){
         auto nsec2 = std::chrono::duration_cast<std::chrono::nanoseconds>(dur2).count();
         PRINT((double)nsec2/(1000000000));
         for(int j = 0; j < N; j++){
-            if(f[i] != f2[i]) PRINT("NG");
+            if(f[i] != f2[i]){
+                PRINT("NG");
+                return 0;
+            }
         }
     }
 }
