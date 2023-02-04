@@ -14,26 +14,24 @@ class BinarySearchTree(BinaryIndexedTree):
         self.add(x, -1)
     def count(self):
         return self.get(self.max_size)
-    def findLessThan(self, t, equal=True):
-        t -= (not equal)
-        s = self.get(t+1) # num of <= t
+    def findLessOrEqualThan(self, t):
+        s = self.get(t) # num of <= t
         if s == 0:
             return None
         R,L = t, -1
         while R-L>1:
             x = (R+L)//2
-            L,R = (L,x) if s == self.get(x+1) else (x,R)
+            L,R = (L,x) if s == self.get(x) else (x,R)
         return R 
-    def findGreaterThan(self, t, equal=True):
-        t += (not equal)
+    def findGreaterThan(self, t):
         s = self.get(t) # num of < t
         if s == self.get(self.max_size):
             return None
-        L,R = t-1, self.max_size
+        L,R = t, self.max_size
         while R-L>1:
             x = (L+R)//2
-            L,R = (x,R) if s == self.get(x+1) else (L,x)
-        return L+1
+            L,R = (x,R) if s == self.get(x) else (L,x)
+        return R
 
 class BinarySearchTreeWithCompressedData(BinarySearchTree):
     def __init__(self, data):
