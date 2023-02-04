@@ -3,8 +3,11 @@
 #include<algorithm>
 #include<random>
 #include<chrono>
+
 #define PRINT(text) (std::cout << (text) << std::endl);
 #define VPRINT(vec) for(const auto& x:vec){std::cout << x << ' ';};std::cout << std::endl;
+
+using ll = long long;
 
 template<typename T>
 constexpr T powMod(T p, T n, T m){
@@ -18,11 +21,21 @@ constexpr T powMod(T p, T n, T m){
 }
 
 template<typename T>
-int bitLength(T i){
+const int bitLength(T i){
     int res = 0;
     while(i){
         i >>= 1;
         res++;
+    }
+    return res;
+}
+
+template<typename T>
+constexpr int getFactor(T i){
+    int res = 0;
+    while((i&1)==0){
+        res += 1;
+        i >>= 1;
     }
     return res;
 }
@@ -33,93 +46,25 @@ int bitLength(T i){
 //const long long Q = 31;
 constexpr long long MOD = 167772161;
 constexpr long long K = 5;
+constexpr long long M = 25;
 constexpr long long IK = powMod(K,MOD-2,MOD);
 constexpr long long IK2 = (IK*IK)%MOD;
-constexpr long long M = 25;
 constexpr long long Q = 17;
 constexpr long long K2 = (K*K)%MOD;
 constexpr long long mask = (1<<M)-1;
-const long long k_red(long long c){
-    return K*(c&mask) - (c>>M);
-}
-const long long k_red_2x(long long c){
-    return (K2*(c&mask)) - (K*((c>>M)&mask)) + (c>>(M*2));
-}
 
 class NTT{
-    using ll = long long;
     public:
 
     std::vector<ll> ws = std::vector<ll>(M+1);
     std::vector<ll> iws = std::vector<ll>(M+1);
-    std::vector<ll> wsik2 = std::vector<ll>(M+1);
-    std::vector<ll> iwsik2 = std::vector<ll>(M+1);
 
     NTT(){
         for(ll i = 0; i < M+1; i++){
             ws[i] = powMod(Q, 1ll<<(M-i), MOD);
-            wsik2[i] = ws[i]*IK2%MOD;
             iws[i] = powMod(ws[i], MOD-2, MOD);
-            iwsik2[i] = iws[i]*IK2%MOD;
         }
     };
-    void nttRed(std::vector<ll>& A){
-        if(A.size() == 1) return;
-        int n = A.size();
-        int k = bitLength(n-1);
-        int r = 1<<(k-1);
-        ll kik = powMod(IK,(long long)k,MOD);
-        for(int i = 0; i < n; i++){
-            A[i] = A[i]*kik%MOD;
-            if(A[i]<0) A[i] += MOD;
-        }
-        for(int m = k; m > 0; m--){
-            for(int l = 0; l < n; l+=2*r){
-                ll wi = IK;
-                for(int i = 0; i < r; i++){
-                    ll s = k_red(A[l+i]+A[l+i+r]);
-                    A[l+i+r] = k_red_2x((A[l+i]-A[l+i+r])*wi);
-                    A[l+i] = s;
-                    wi = k_red_2x(wi*wsik2[m]);
-                }
-            }
-            r >>= 1;
-        }
-        for(int i = 0; i < n; i++){
-            A[i] = A[i] % MOD;
-            if(A[i]<0) A[i] += MOD;
-        }
-    }
-    void inttRed(std::vector<ll>& A){
-        if(A.size() == 1) return;
-        ll n = A.size();
-        int k = bitLength(n-1);
-        int r = 1;
-
-        ll kik2 = powMod(IK2,(long long)k,MOD);
-        for(int i = 0; i < n; i++){
-            A[i] = A[i]*kik2%MOD;
-        }
-
-        for(int m = 1; m < k+1; m++){
-            for(int l = 0; l < n; l+=2*r){
-                ll wi = 1;
-                for(int i = 0; i < r; i++){
-                    ll s = k_red_2x(A[l+i]+A[l+i+r]*wi);
-                    A[l+i+r] = k_red_2x(A[l+i]-A[l+i+r]*wi);
-                    A[l+i] = s;
-                    //wi = wi*iws[m]%MOD;
-                    wi = k_red_2x(wi*iwsik2[m]);
-                }
-            }
-            r <<= 1;
-        }
-        ll ni = powMod(n, MOD-2, MOD);
-        for(int i = 0; i < n; i++){
-            A[i] = A[i]*ni%MOD;
-            if(A[i]<0) A[i] += MOD;
-        }
-    }
     void ntt(std::vector<ll>& A){
         if(A.size() == 1) return;
         int n = A.size();
@@ -185,7 +130,88 @@ class NTT{
         }
         intt(f);
     }
-    void polymulRed(std::vector<ll>& f, std::vector<ll>& g) {
+};
+
+class NTTRed{
+    public:
+
+    std::vector<ll> ws = std::vector<ll>(M+1);
+    std::vector<ll> iws = std::vector<ll>(M+1);
+    std::vector<ll> wsik2 = std::vector<ll>(M+1);
+    std::vector<ll> iwsik2 = std::vector<ll>(M+1);
+
+    NTTRed(){
+        for(ll i = 0; i < M+1; i++){
+            ws[i] = powMod(Q, 1ll<<(M-i), MOD);
+            wsik2[i] = ws[i]*IK2%MOD;
+            iws[i] = powMod(ws[i], MOD-2, MOD);
+            iwsik2[i] = iws[i]*IK2%MOD;
+        }
+    };
+    const long long k_red(const long long c){
+        return K*(c&mask) - (c>>M);
+    }
+    const long long k_red_2x(const long long c){
+        return (K2*(c&mask)) - (K*((c>>M)&mask)) + (c>>(M*2));
+    }
+    void ntt(std::vector<ll>& A){
+        if(A.size() == 1) return;
+        int n = A.size();
+        int k = bitLength(n-1);
+        int r = 1<<(k-1);
+        ll kik = powMod(IK,(long long)k,MOD);
+        for(int i = 0; i < n; i++){
+            A[i] = A[i]*kik%MOD;
+            if(A[i]<0) A[i] += MOD;
+        }
+        for(int m = k; m > 0; m--){
+            for(int l = 0; l < n; l+=2*r){
+                ll wi = IK;
+                for(int i = 0; i < r; i++){
+                    ll s = k_red(A[l+i]+A[l+i+r]);
+                    A[l+i+r] = k_red_2x((A[l+i]-A[l+i+r])*wi);
+                    A[l+i] = s;
+                    wi = k_red_2x(wi*wsik2[m]);
+                }
+            }
+            r >>= 1;
+        }
+        for(int i = 0; i < n; i++){
+            A[i] = A[i] % MOD;
+            if(A[i]<0) A[i] += MOD;
+        }
+    }
+    void intt(std::vector<ll>& A){
+        if(A.size() == 1) return;
+        ll n = A.size();
+        int k = bitLength(n-1);
+        int r = 1;
+
+        ll kik2 = powMod(IK2,(long long)k,MOD);
+        for(int i = 0; i < n; i++){
+            A[i] = A[i]*kik2%MOD;
+        }
+
+        for(int m = 1; m < k+1; m++){
+            for(int l = 0; l < n; l+=2*r){
+                ll wi = 1;
+                for(int i = 0; i < r; i++){
+                    ll s = k_red_2x(A[l+i]+A[l+i+r]*wi);
+                    A[l+i+r] = k_red_2x(A[l+i]-A[l+i+r]*wi);
+                    A[l+i] = s;
+                    //wi = wi*iws[m]%MOD;
+                    wi = k_red_2x(wi*iwsik2[m]);
+                }
+            }
+            r <<= 1;
+        }
+        ll ni = powMod(n, MOD-2, MOD);
+        for(int i = 0; i < n; i++){
+            A[i] = A[i]*ni%MOD;
+            if(A[i]<0) A[i] += MOD;
+        }
+    }
+    void polymul(std::vector<ll>& f, std::vector<ll>& g) {
         int nf = f.size();
         int ng = g.size();
         int m = nf+ng-1;
@@ -198,12 +224,12 @@ class NTT{
         }
         f.resize(n, 0);
         g.resize(n, 0);
-        nttRed(f);
-        nttRed(g);
+        ntt(f);
+        ntt(g);
         for(int i = 0; i < n; i++){
             f[i] = f[i]*g[i]%MOD;
         }
-        inttRed(f);
+        intt(f);
     }
 };
 
@@ -223,6 +249,7 @@ std::vector<long long> greedy(std::vector<long long>& f, std::vector<long long>&
 
 void test(){
     NTT ntt = NTT();
+    NTTRed ntt_red = NTTRed();
     //int N = 10;
     //int M = 100;
     //std::mt19937 e;
@@ -244,12 +271,13 @@ void test(){
     VPRINT(fg);
     ntt.polymul(f,g);
     VPRINT(f);
-    ntt.polymulRed(f2,g2);
+    ntt_red.polymul(f2,g2);
     VPRINT(f2);
 }
 
 int main(){
     NTT ntt = NTT();
+    NTTRed ntt_red = NTTRed();
     int N = 1000000;
     int M = 100;
     std::mt19937 e;
@@ -279,7 +307,7 @@ int main(){
         PRINT((double)nsec/(1000000000));
 
         auto start2 = std::chrono::system_clock::now();
-        ntt.polymulRed(f2,g2);
+        ntt_red.polymul(f2,g2);
         auto end2 = std::chrono::system_clock::now();
         auto dur2 = end2 - start2;
         auto nsec2 = std::chrono::duration_cast<std::chrono::nanoseconds>(dur2).count();
