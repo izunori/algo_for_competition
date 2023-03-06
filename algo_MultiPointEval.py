@@ -1,7 +1,8 @@
 from algo_nnt import NNT
 from algo_Poly import *
+MOD=998244353
 
-def multiPointEval(f, xs, MOD=998244353):
+def multiPointEval(f, xs):
     n = len(xs)
     l = 2**(n-1).bit_length()
     def simpleProd(xs):
@@ -34,7 +35,7 @@ def test():
     MOD = 998244353
     f = [1,2,3,2,5]
     xs = [-1,-2,-3]
-    ys = multiPointEval(f, xs, MOD)
+    ys = multiPointEval(f, xs)
     def F(x):
         res,xn = 0,1
         for a in f:
@@ -48,8 +49,8 @@ def perf():
     import random
     from time import perf_counter as time
     MOD = 998244353
-    N = 100
-    M = 10
+    N = 2*10**5
+    M = 2*10**5
     f = [random.randint(0,MOD-1) for _ in range(N)]
     xs = [random.randint(0,MOD-1) for _ in range(M)]
     start = time()
