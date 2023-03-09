@@ -1,4 +1,5 @@
 from collections import defaultdict, deque
+import array as ar
 def ManberMyers(S, conv=ord):
     N = len(S)
     d = defaultdict(list)
@@ -27,6 +28,50 @@ def ManberMyers(S, conv=ord):
             if len(d[k]) > 1:
                 tbd.append((d[k],l*2))
     result = [0]*(N+1)
+    for i,r in enumerate(rank):
+        result[r] = i
+    return result
+
+def ManberMyers3(S, conv=ord):
+    N = len(S)
+    d = defaultdict(list)
+    for i,s in enumerate(S):
+        d[conv(s)].append(i)
+    rank = ar.array('i',[0]*(N+1))
+    i = 1 # offset for empty
+    tbd = deque([])
+    for k in sorted(d.keys()):
+        for t in d[k]:
+            rank[t] = i
+        i += len(d[k])
+        if len(d[k]) > 1:
+            tbd.append((d[k],1))
+    while tbd:
+        target, l = tbd.popleft()
+        if len(target) == 2:
+            x,y = target
+            nx = rank[x+l] if x+l < N else -1
+            ny = rank[y+l] if y+l < N else -1
+            if nx==ny:
+                tbd.append(((x,y),l*2))
+            elif nx < ny:
+                rank[y] += 1
+            else:
+                rank[x] += 1
+            continue
+        d = defaultdict(list)
+        for t in target:
+            nt = rank[t+l] if t+l < N else -1
+            d[nt].append(t)
+        i = 0
+        for k in sorted(d.keys()):
+            if i > 0:
+                for t in d[k]:
+                    rank[t] += i
+            i += len(d[k])
+            if len(d[k]) > 1:
+                tbd.append((d[k],l*2))
+    result = ar.array('i',[0]*(N+1))
     for i,r in enumerate(rank):
         result[r] = i
     return result
@@ -93,9 +138,48 @@ def LongestCommonPrefixArray(S, sa):
         result[rank[i]-1] = l
     return result
 
-def test():
+def test_sa():
+    import random
+    import string
+    N = 8
+    M = 10000
+    for _ in range(M):
+        S = "".join([chr(97+random.randint(0,1)) for _ in range(N)])
+        res = list(ManberMyers(S))
+        res2 = for_test(S)
+        if res != res2:
+            print("failed:",S)
+            print(res)
+            print(res2)
+            exit()
+
+def perf_sa():
+    from time import perf_counter as time
+    import string
+    import random
+    print("--perf")
+
+    N = 2*(10**5)
+
+    S = "".join(random.choices(string.ascii_letters, k=N))
+    start = time()
+    sa = ManberMyers(S)
+    print(f'random: {time()-start}s')
+
+    S = "a"*N
+    start = time()
+    sa = ManberMyers(S)
+    print(f'all a : {time()-start}s')
+
+    T = "".join([chr(97+random.randint(0,1)) for _ in range(N//2)])
+    T = T+T
+    start = time()
+    sa = ManberMyers(T)
+    print(f'4 times: {time()-start}s')
+
+def test_lcp():
     S = 'abracadabra'
-    res = ManberMyers(S)
+    res = ManberMyers3(S)
     res2 = for_test(S)
     lcp = LongestCommonPrefixArray(S, res)
 
@@ -115,29 +199,16 @@ def test():
     print(lcp)
     print(res == res2)
 
-
-def perf():
-    from time import perf_counter as time
-    import string
-    import random
-
-    N = 10**6
-    #S = "".join(random.choices(string.ascii_letters, k=N))
-    #S = "a"*N
-    S = "a"*(N//2)+"b"*(N//2)
-
-    start = time()
+def perf_lcp():
+    S = "".join(random.choices(string.ascii_letters, k=N))
     sa = ManberMyers(S)
-    print(f'{time()-start}s')
 
     start = time()
     lcp = LongestCommonPrefixArray(S,sa)
-    print(f'{time()-start}s')
+    r2 = for_test(S)
+    print(f'lcp: {time()-start}s')
 
-    #start = time()
-    #r2 = for_test(S)
-    #print(f'{time()-start}s')
 
 if __name__=='__main__':
-    test()
-    perf()
+    test_sa()
+    perf_sa()
