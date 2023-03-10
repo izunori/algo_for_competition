@@ -1,40 +1,37 @@
 from collections import defaultdict, deque
 from algo_ManberMyers import ManberMyers
 def SA_IS(S):
+    if type(S) is str:
+        S = list(map(ord, S))
     if len(S) == 1:
         return [1,0]
-    N = len(S)
-    ls = [1]*(N+1)
-    ls[-2] = 0
-    ss = ['']+sorted(set(S))
+    comp = {x:i for i,x in enumerate(sorted(set(S)))}
+    S = [comp[s] for s in S]
+    N,K = len(S),len(comp)
+    ls = [0]*N+[1]
     for i in range(N-2,-1,-1):
-        if S[i] < S[i+1]:
-            ls[i] = 1 # S
-        elif S[i] > S[i+1]:
-            ls[i] = 0 # L
-        else:
-            ls[i] = ls[i+1]
+        ls[i] = ls[i+1] if S[i] == S[i+1] else (S[i] < S[i+1]) # 0:S, 1:L
     lms = [i+1 for i in range(N+1) if not ls[i] and ls[i+1]]
     M = len(lms)
-    lms_subs = {N:''}
+    lms_subs = {N:-1}
     for i in range(M-1):
         lms_subs[lms[i]] = S[lms[i]:lms[i+1]+1]
     def induced_sort(lms):
         rank = [-1]*(N+1)
         rank[0] = N
-        d = {s:[0,0] for s in ss}
+        d = [[0,0] for k in range(K+1)]
         for s,x in zip(S,ls):
             d[s][x] += 1
-        d[''][1] = 1
-        d2 = {s:[None,None] for s in ss}
+        d[-1][1] = 1
+        d2 = [[None,None] for k in range(K+1)]
         i = 0
-        for s in ss:
+        for s in range(-1,K):
             for x in range(2):
                 l = d[s][x]
                 d2[s][x] = [i,i+l,i+l]
                 i += l
         for i in lms[::-1]:
-            s = S[i] if i < N else ''
+            s = S[i] if i < N else -1
             j = d2[s][1][1]
             rank[j-1] = i
             d2[s][1][1] -= 1
