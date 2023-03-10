@@ -19,38 +19,39 @@ def SA_IS(S):
     def induced_sort(lms):
         rank = [-1]*(N+1)
         rank[0] = N
-        d = [[0,0] for k in range(K+1)]
-        for s,x in zip(S,ls):
-            d[s][x] += 1
-        d[-1][1] = 1
-        d2 = [[None,None] for k in range(K+1)]
+        d = [0 for k in range(K+1)]
+        for s in S:
+            d[s] += 1
+        d[-1] = 1
+        d2 = [0 for k in range(K+1)]
         i = 0
         for s in range(-1,K):
-            for x in range(2):
-                l = d[s][x]
-                d2[s][x] = [i,i+l,i+l]
-                i += l
+            l = d[s]
+            d2[s] = i+l
+            i += l
+        d3 = d2[:]
+        d4 = d2[:]
         for i in lms[::-1]:
             s = S[i] if i < N else -1
-            j = d2[s][1][1]
+            j = d2[s]
             rank[j-1] = i
-            d2[s][1][1] -= 1
+            d2[s] -= 1
         for k in range(N+1):
             i = rank[k]
             if i == -1:
                 continue
             if ls[i-1] == 0:
                 s = S[i-1]
-                j = d2[s][0][0]
+                j = d3[s-1]
                 rank[j] = i-1
-                d2[s][0][0] += 1
+                d3[s-1] += 1
         for k in range(N,-1,-1):
             i = rank[k]
             if i > 0 and ls[i-1] == 1:
                 s = S[i-1]
-                j = d2[s][1][2]
+                j = d4[s]
                 rank[j-1] = i-1
-                d2[s][1][2] -= 1
+                d4[s] -= 1
         return rank
     rank = induced_sort(lms)
     lms2 = [i for i in rank if i > 0 and not ls[i-1] and ls[i]]
