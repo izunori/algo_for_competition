@@ -57,7 +57,7 @@ def SA_IS(S):
     new_lms = [lms[i] for i in res[1:]]
     return list(induced_sort(new_lms))
 
-def for_test(S):
+def greedy(S):
     N = len(S)
     temp = [(S[i:],i) for i in range(N+1)]
     _, res = zip(*sorted(temp))
@@ -67,15 +67,15 @@ def test():
     print("--test")
     S = 'mmiissiissiippii'
     print(SA_IS(S))
-    print(for_test(S))
+    print(greedy(S))
 
 def test_random():
     import random
-    N = 100
+    N = 1000
     M = 100
     for _ in range(M):
         S = "".join([chr(97+random.randint(0,1)) for _ in range(N)])
-        ans = for_test(S)
+        ans = greedy(S)
         res = SA_IS(S)
         if ans != res:
             print("failed:", S)
@@ -94,11 +94,16 @@ def perf():
 
     start=time()
     SA_IS(S)
-    print(f"{time()-start}") 
+    print(f"SA_IS : {time()-start}") 
 
     start=time()
     ManberMyers(S)
-    print(f"{time()-start}") 
+    print(f"MM    : {time()-start}") 
+
+    if N <= 10**4:
+        start=time()
+        greedy(S)
+        print(f"greedy: {time()-start}") 
 
 if __name__=='__main__':
     test()
