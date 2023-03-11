@@ -37,8 +37,9 @@ if __name__=='__main__':
     tsp = TSP(N)
     sol = list(range(N))
     print(tsp.eval(sol))
+    cities = list(range(len(sol)-1))
     for _ in range(1000):
-        i,j = sorted(random.sample(range(len(sol)-1),2))
+        i,j = sorted(random.sample(cities,2))
         diff = tsp.evalTwoOpt(sol,i,j)
         if diff < 0:
             tsp.twoOpt(sol,i,j)
