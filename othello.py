@@ -63,14 +63,12 @@ def move(bw, turn, pos, inplace=True):
 
 def nextStateOf(bw, turn):
     size = GAME_SIZE
-    result = []
     for x in range(size):
         for y in range(size):
             res = move(bw, turn, (x,y))
             if res is not None:
                 ncnt = count(res)
-                result.append((res, ncnt))
-    return result
+                yield res, ncnt
 
 def compress(board):
     b,w = 0,0
