@@ -147,6 +147,33 @@ def testExp():
     else:
         print('OK')
 
+def testLogExp():
+    print("---test exp-log")
+    import random
+    N = 100
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    f[0] = 1
+    logf = polyLog(f)
+    explogf = polyExp(logf)
+    for x,y in zip(f, explogf):
+        if x != y:
+            print('Fail')
+            break
+    else:
+        print('OK')
+
+    print("---test log-exp")
+    g = [random.randint(0,MOD-1) for _ in range(N)]
+    g[0] = 0
+    expg = polyExp(g)
+    logexpg = polyLog(expg)
+    for x,y in zip(g, logexpg):
+        if x != y:
+            print('Fail')
+            break
+    else:
+        print('OK')
+
 def testDiff():
     print("--test Diff")
     f = [2,3,4,5]
@@ -193,6 +220,7 @@ if __name__=='__main__':
     testDiv()
     testLog()
     testExp()
+    testLogExp()
     #perfInv()
     #perfDiv()
 
