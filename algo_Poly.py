@@ -174,6 +174,20 @@ def testLogExp():
     else:
         print('OK')
 
+def perfLogExp():
+    print("---perf exp-log")
+    import random
+    from time import perf_counter as time
+    N = 2*10**5
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    f[0] = 1
+    start=time()
+    logf = polyLog(f)
+    print(f"log: {time()-start}") 
+    start=time()
+    explogf = polyExp(logf)
+    print(f"exp: {time()-start}") 
+
 def testDiff():
     print("--test Diff")
     f = [2,3,4,5]
@@ -221,6 +235,7 @@ if __name__=='__main__':
     testLog()
     testExp()
     testLogExp()
+    perfLogExp()
     #perfInv()
     #perfDiv()
 
