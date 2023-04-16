@@ -12,7 +12,6 @@ def polyInvNNT(f, r=-1):
     r = r if r > 0 else len(f)
     f = f + [0]*(r-len(f))
     g = [pow(f[0],MOD-2,MOD)]
-    nnt = NNT()
     m = 1
     while m < r:
         h = nnt.polymul(f[:2*m],g)[m:2*m]
@@ -74,10 +73,20 @@ def polyLog(f):
     df = polyDiff(f)
     rf = polyInv(f)
     dfrf = nnt.polymul(df,rf)
-    return polyInt(dfrf)[:len(f)]
+    return polyInt(dfrf)[:len(f)+1]
 
+# f[0] must be 0
 def polyExp(f):
-    pass
+    assert f[0] == 0
+    g = [1]
+    m,r = 1,len(f)
+    while m < r:
+        h = [-x+y for x,y in zip_longest(polyLog(g),f[:2*m+1],fillvalue=0)]
+        h[0] += 1
+        g = nnt.polymul(g,h)
+        m *= 2
+    return g[:r]
+    
 
 def perfInv():
     print("--perf Inversion")
@@ -113,6 +122,25 @@ def testLog():
     fg = nnt.polymul(f,g)
     logfg = polyLog(fg)
     for x,y in zip(polyAdd(logf,logg), logfg):
+        if x != y:
+            print('Fail')
+            break
+    else:
+        print('OK')
+
+def testExp():
+    print("---test exp")
+    import random
+    N = 100
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    g = [random.randint(0,MOD-1) for _ in range(N)]
+    f[0] = 0
+    g[0] = 0
+    expf = polyExp(f)
+    expg = polyExp(g)
+    expf_g = polyExp(polyAdd(f,g))
+    expfexpg = nnt.polymul(expf,expg)
+    for x,y in zip(expf_g, expfexpg):
         if x != y:
             print('Fail')
             break
@@ -164,6 +192,7 @@ if __name__=='__main__':
     testDiff()
     testDiv()
     testLog()
+    testExp()
     #perfInv()
     #perfDiv()
 
