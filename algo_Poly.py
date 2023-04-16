@@ -1,5 +1,7 @@
 from algo_nnt import NNT
+from itertools import zip_longest
 MOD = 998244353
+nnt = NNT()
 def polyInv(f,r=-1):
     assert f[0] != 0
     r = r if r > 0 else len(f)
@@ -29,8 +31,14 @@ def polyInvSimple(f,r=-1):
         g[n] = (-g[n]*g[0])%MOD
     return g
 
+def polyAdd(f,g):
+    return [(x+y)%MOD for x,y in zip_longest(f,g,fillvalue=0)]
+
 def polyDiff(f):
     return [(n*a)%MOD for n,a in enumerate(f[1:], 1)]
+
+def polyInt(f):
+    return [0] + [x * pow(i,MOD-2,MOD) % MOD for i,x in enumerate(f,1)]
 
 def polyDiv(f, g):
     while g[-1] == 0 : # TODO Refact
@@ -60,6 +68,17 @@ def testInv():
     else:
         print(f,r)
 
+# f[0] must be 1
+def polyLog(f):
+    assert f[0] == 1
+    df = polyDiff(f)
+    rf = polyInv(f)
+    dfrf = nnt.polymul(df,rf)
+    return polyInt(dfrf)[:len(f)]
+
+def polyExp(f):
+    pass
+
 def perfInv():
     print("--perf Inversion")
     import random
@@ -80,6 +99,25 @@ def perfInv():
     g2 = polyInv(f,r)
     print(f"{time() - start}")
     print(g1==g2)
+
+def testLog():
+    print("--test log")
+    import random
+    N = 100
+    f = [random.randint(0,MOD-1) for _ in range(N)]
+    g = [random.randint(0,MOD-1) for _ in range(N)]
+    f[0] = 1
+    g[0] = 1
+    logf = polyLog(f)
+    logg = polyLog(g)
+    fg = nnt.polymul(f,g)
+    logfg = polyLog(fg)
+    for x,y in zip(polyAdd(logf,logg), logfg):
+        if x != y:
+            print('Fail')
+            break
+    else:
+        print('OK')
 
 def testDiff():
     print("--test Diff")
@@ -122,13 +160,10 @@ def perfDiv():
 
 
 if __name__=='__main__':
-    #testInv()
-    #testInv() # JIT
-    #testInv() # JIT
-    #testInv() # JIT
-    #testInv() # JIT
-    #testDiff()
+    testInv()
+    testDiff()
     testDiv()
-    perfInv()
-    perfDiv()
+    testLog()
+    #perfInv()
+    #perfDiv()
 
