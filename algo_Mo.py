@@ -2,6 +2,8 @@ def MoSort(lr):
     l,r = zip(*lr)
     mx = max(max(l),max(r))
     block = mx // int(len(lr)**0.5)
+    if block == 0:
+        return
     def val(x):
         n = x[0]//block
         return 2 * n * mx + (-1 if n&1 else 1)*x[1]
