@@ -3,24 +3,14 @@ from algo_segment_tree import SegmentTree
 N = 8
 
 class LCA:
-    def __init__(self, g, N, pv=1, GN=20):
+    def __init__(self, g, maxv, pv=1):
         g = defaultdict(list,g)
-        self.N = N
+        self.N = maxv
         self.g = g
-        self.GN = GN
+        self.GN = len(bin(maxv))
         self.pv = pv
         # ancester
-        self.parent = [0]*(self.N+1)
-        for p,cs in g.items():
-            for c in cs:
-                self.parent[c] = p
-        self.ancestor = [self.parent]
-        for i in range(self.GN):
-            temp = [0]*(N+1)
-            for v in range(self.N):
-                temp[v] = self.ancestor[-1][self.ancestor[-1][v]]
-            self.ancestor.append(temp)
-
+        self.parent = [-1]*(self.N+1)
         self.depth = [-1]*(N+1)
         self.depth[pv] = 0
         dq = deque([pv])
@@ -28,8 +18,15 @@ class LCA:
             v = dq.popleft()
             for nv in g[v]:
                 if self.depth[nv] == -1:
+                    self.parent[nv] = v
                     self.depth[nv] = self.depth[v] + 1
                     dq.append(nv)
+        self.ancestor = [self.parent]
+        for i in range(self.GN):
+            temp = [0]*(N+1)
+            for v in range(self.N):
+                temp[v] = self.ancestor[-1][self.ancestor[-1][v]]
+            self.ancestor.append(temp)
     def find(self,u,v):
         if self.depth[u] > self.depth[v]:
             u,v = v,u
@@ -37,6 +34,8 @@ class LCA:
         for i,ancestor in enumerate(self.ancestor):
             if diff & (1<<i):
                 v = self.ancestor[i][v]
+        if u == v:
+            return u
         for ancestor in self.ancestor[::-1]:
             if ancestor[u] != ancestor[v]:
                 u,v = map(lambda x : ancestor[x], (u,v))

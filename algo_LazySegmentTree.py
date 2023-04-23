@@ -178,7 +178,7 @@ def test2():
     data = [0]*N
     for (l,r),v in samples:
         for x in range(l,r):
-            data[x] += v
+            data[x] += v # add pattern
     seg = LazySegmentTree([0]*N, add, 0, add, add, 0, lambda x:x//2, lambda x:x*2)
     for (l,r),v in samples:
         seg.set(l,r,v)
@@ -202,7 +202,7 @@ def test3():
     data = [0]*N
     for (l,r),v in samples:
         for x in range(l,r):
-            data[x] = v
+            data[x] = v # overwrite pattern
     for (l,r),v in samples:
         seg.set(l,r,v)
 
