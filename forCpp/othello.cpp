@@ -161,15 +161,15 @@ class RandomPlayer : public othello::Player {
 
 class MinMaxPlayer : public othello::Player {
     int depth = 1;
-    int max_score = -100;
     public:
     MinMaxPlayer(int depth = 1):depth(depth){};
 
     othello::Result move(const othello::Board& bw, int turn) override {
-        return move(bw, turn, depth, max_score);
+        return move(bw, turn, depth);
     }
 
-    othello::Result move(const othello::Board& bw, int turn, int depth, int max_score){
+    othello::Result move(const othello::Board& bw, int turn, int depth){
+        int max_score = -100;
         othello::Board fbw;
         auto states = othello::nextStatesOf(bw, turn);
         if(states.empty()) return {false, bw};
@@ -183,12 +183,12 @@ class MinMaxPlayer : public othello::Player {
             //othello::printBoard(nbw);
             //std::cout << std::endl;
             int tscore = (nb - nw) * coeff;
-            if(tscore < max_score) continue;
+            //if(tscore < max_score) continue;
             for(const auto& nstate : othello::nextStatesOf(nbw, othello::next(turn))){
                 auto& [nx,ny,nnb,nnw,nnbw] = nstate;
                 int tscore = (nnb - nnw) * coeff;
                 if(depth > 1){
-                    auto [ok, nnnbw] = move(nnbw, turn, depth-1, max_score);
+                    auto [ok, nnnbw] = move(nnbw, turn, depth-1);
                     auto [nnnb,nnnw] = othello::count(nnnbw);
                     tscore = (nnnb - nnnw) * coeff;
                 }
@@ -212,9 +212,9 @@ void debug(){
 int main(){
     //debug();
     //return 0;
-    //std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
+    std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
     //std::shared_ptr<othello::Player> player2 = std::make_shared<RandomPlayer>();
-    std::shared_ptr<othello::Player> player1 = std::make_shared<MinMaxPlayer>(1);
+    //std::shared_ptr<othello::Player> player1 = std::make_shared<MinMaxPlayer>(1);
     std::shared_ptr<othello::Player> player2 = std::make_shared<MinMaxPlayer>(2);
     int N = 1000;
     bool show = false;
