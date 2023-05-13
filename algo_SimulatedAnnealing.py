@@ -34,7 +34,7 @@ def test_HC(sol, tsp, M):
             score = new_score
             tsp.twoOpt(sol,i,j)
     score = tsp.eval(sol)
-    print(score)
+    print("hc:", score)
 
 def test_SA(sol, tsp, M):
     sa = SimulatedAnnealing(M, 10, 1)
@@ -48,14 +48,14 @@ def test_SA(sol, tsp, M):
             score = new_score
             tsp.twoOpt(sol,i,j)
     score = tsp.eval(sol)
-    print(score)
+    print("sa:",score)
 
 if __name__=='__main__':
     N = 100
     tsp = TSP(N)
     sol = list(range(N))
     ini_score = tsp.eval(sol)
-    print(ini_score)
+    print("initial:", ini_score)
     M = 10**5
     test_HC(sol[:], tsp, M)
     test_SA(sol[:], tsp, M)

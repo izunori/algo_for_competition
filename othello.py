@@ -1,7 +1,7 @@
 from collections import Counter
 from itertools import product, chain
 
-GAME_SIZE = 6
+GAME_SIZE = 8
 
 def printBoard(bw):
     board = decompress(bw)
@@ -68,7 +68,7 @@ def nextStateOf(bw, turn):
             res = move(bw, turn, (x,y))
             if res is not None:
                 ncnt = count(res)
-                yield res, ncnt
+                yield (x,y), res, ncnt
 
 def compress(board):
     b,w = 0,0
@@ -95,11 +95,11 @@ def decompress(bw):
 if __name__=='__main__':
     bw = generate()
     printBoard(bw)
-    for nbw, ncnt in nextStateOf(bw, 1):
+    for _, nbw, ncnt in nextStateOf(bw, 1):
         printBoard(nbw)
         print(ncnt)
     bw = nbw
-    for nbw, ncnt in nextStateOf(bw, -1):
+    for _, nbw, ncnt in nextStateOf(bw, -1):
         printBoard(nbw)
         print(ncnt)
 
