@@ -68,7 +68,7 @@ namespace othello{
     Result move(const Board& bw, int turn, int x, int y, bool inplace=true){
         btype pos = getBit(x,y);
         if(bw[0] & pos || bw[1] & pos) return {false, bw};
-        int nturn = (turn + 1) & 1;
+        int nturn = othello::next(turn);
         int cnt = 0;
         for(int dx = -1; dx < 2; dx++){
             for(int dy = -1; dy < 2; dy++){
@@ -160,7 +160,7 @@ class RandomPlayer : public othello::Player {
 };
 
 class MinMaxPlayer : public othello::Player {
-    int depth = 1;
+    int depth;
     public:
     MinMaxPlayer(int depth = 1):depth(depth){};
 
@@ -179,11 +179,7 @@ class MinMaxPlayer : public othello::Player {
         for(const auto& state : states){
             int min_score = 100;
             auto& [x,y,nb,nw,nbw] = state;
-            //std::cout << "depth:" << depth << std::endl;
-            //othello::printBoard(nbw);
-            //std::cout << std::endl;
             int tscore = (nb - nw) * coeff;
-            //if(tscore < max_score) continue;
             for(const auto& nstate : othello::nextStatesOf(nbw, othello::next(turn))){
                 auto& [nx,ny,nnb,nnw,nnbw] = nstate;
                 int tscore = (nnb - nnw) * coeff;
@@ -203,6 +199,90 @@ class MinMaxPlayer : public othello::Player {
     }
 };
 
+class MinMaxPlayer2 : public othello::Player {
+    int depth;
+    int my_turn = 0;
+    int coeff = 0;
+    public:
+    MinMaxPlayer2(int depth = 1):depth(depth){};
+
+    othello::Result move(const othello::Board& bw, int turn) override {
+        my_turn = turn;
+        coeff = (turn == 0) ? 1 : -1;
+
+        auto states = othello::nextStatesOf(bw, turn);
+        if(states.empty()) return {false, bw};
+
+        std::shuffle(states.begin(), states.end(), mt);
+
+        othello::Board result;
+        int score = -100;
+        for(const auto& state : states){
+            auto& [x,y,nb,nw,nbw] = state;
+            int tscore = move(nbw, othello::next(turn), depth-1, -100, 100);
+            if(score < tscore){
+                score = tscore;
+                result = std::move(nbw);
+            }
+        }
+        
+        return {true, result};
+    }
+
+    int move(const othello::Board& bw, int turn, int depth, int alpha, int beta){
+        auto states = othello::nextStatesOf(bw, turn);
+        if(states.empty() || depth == 0){
+            auto [nb, nw] = othello::count(bw);
+            int score = (nb-nw) * coeff;
+            return score;
+        }
+        if(turn == my_turn){
+            for(const auto& state : states){
+                auto& [x,y,nb,nw,nbw] = state;
+                alpha = std::max(alpha, move(nbw, othello::next(turn), depth-1, alpha, beta));
+                if(alpha >= beta) break;
+            }
+            return alpha;
+        } else {
+            for(const auto& state : states){
+                auto& [x,y,nb,nw,nbw] = state;
+                beta = std::min(beta, move(nbw, othello::next(turn), depth-1, alpha, beta));
+                if(alpha >= beta) break;
+            }
+            return beta;
+        }
+    }
+};
+
+
+class BeamSearch : public othello::Player {
+    int depth;
+    int width;
+    using Candidate = std::tuple<int, int, othello::Board>;
+    public:
+    BeamSearch(int depth = 1, int width = 1):depth(depth),width(width){};
+
+    othello::Result move(const othello::Board& bw, int turn) override {
+        std::vector<othello::Board> bws = {bw};
+        auto states = othello::nextStatesOf(bw, turn);
+        if(states.empty()) return {false, bw};
+
+        std::shuffle(states.begin(), states.end(), mt);
+        int coeff = (turn == 0) ? 1 : -1;
+        std::vector<Candidate> candidates;
+        for(int i = 0; i < states.size(); i++){
+            auto& [x,y,nb,nw,nbw] = states[i];
+            int score = (nb-nw)*coeff;
+            candidates.emplace_back(i, score, nbw);
+        }
+        return move(candidates, turn, depth);
+    }
+
+    othello::Result move(std::vector<Candidate>& bws, int turn, int depth){
+
+    }
+};
+
 void debug(){
     auto bw = othello::generate();
     std::shared_ptr<othello::Player> player = std::make_shared<MinMaxPlayer>(2);
@@ -214,8 +294,9 @@ int main(){
     //return 0;
     std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
     //std::shared_ptr<othello::Player> player2 = std::make_shared<RandomPlayer>();
-    //std::shared_ptr<othello::Player> player1 = std::make_shared<MinMaxPlayer>(1);
-    std::shared_ptr<othello::Player> player2 = std::make_shared<MinMaxPlayer>(2);
+    //std::shared_ptr<othello::Player> player1 = std::make_shared<MinMaxPlayer>(2);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<MinMaxPlayer>(3);
+    std::shared_ptr<othello::Player> player2 = std::make_shared<MinMaxPlayer2>(3);
     int N = 1000;
     bool show = false;
     std::map<int,int> result;
