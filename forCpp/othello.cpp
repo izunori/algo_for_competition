@@ -165,10 +165,9 @@ namespace othello{
 
 class RandomPlayer : public othello::Player {
     othello::Result move(const othello::Board& bw, int turn) override {
-        auto states = othello::nextStatesOf(bw, turn);
+        const auto states = othello::nextStatesOf(bw, turn);
         if(states.empty()) return {false, bw};
-        int num = mt() % states.size();
-        auto& [pos,nb,nw,nbw] = states[num];
+        const auto& [pos,nb,nw,nbw] = states[mt() % states.size()];
         return {true, nbw};
     }
 };
@@ -177,32 +176,43 @@ class MiniMaxPlayer : public othello::Player {
     int search_depth;
     int my_turn = 0;
     int coeff = 0;
+    bool find_valid = false;
     using scoreBoard = std::tuple<int, othello::Board>;
 
-    int _move(const othello::Board& bw, int turn, int depth){
+    scoreBoard _move(const othello::Board& bw, int turn, int depth){
         auto states = othello::nextStatesOf(bw, turn);
-        count[search_depth - depth] += 1;
+        //count[search_depth - depth] += 1;
         if(states.empty() || depth == 0){
             auto [nb, nw] = othello::count(bw);
             int score = (nb-nw) * coeff;
-            return score;
+            return {score, bw};
         }
+        std::shuffle(states.begin(), states.end(), mt); // 乱択性のため
+
+        find_valid = true;
+        othello::Board res;
         if(turn == my_turn){
             int max_score = -100;
             for(const auto& state : states){
                 auto& [pos,nb,nw,nbw] = state;
-                auto score = _move(nbw, othello::next(turn), depth-1);
-                if(score > max_score) max_score = score;
+                auto [score, _] = _move(nbw, othello::next(turn), depth-1);
+                if(score > max_score){
+                    max_score = score;
+                    res = nbw;
+                }
             }
-            return max_score;
+            return {max_score, res};
         } else {
             int min_score = 100;
             for(const auto& state : states){
                 auto& [pos,nb,nw,nbw] = state;
-                int score = _move(nbw, othello::next(turn), depth-1);
-                if(score < min_score) min_score = score;
+                auto [score, _] = _move(nbw, othello::next(turn), depth-1);
+                if(score < min_score){
+                    min_score = score;
+                    res = nbw;
+                }
             }
-            return min_score;
+            return {min_score, res};
         }
     }
 
@@ -217,31 +227,60 @@ class MiniMaxPlayer : public othello::Player {
 
     othello::Result move(const othello::Board& bw, int turn) override {
         my_turn = turn;
-        coeff = (turn == 0) ? 1 : -1;
+        coeff = (turn == 0) ? 1 : -1; // スコアに掛ける係数
+        find_valid = false;
 
-        auto states = othello::nextStatesOf(bw, turn);
-        if(states.empty()) return {false, bw};
-
-        std::shuffle(states.begin(), states.end(), mt);
-
-        othello::Board result;
-        int score = -100;
-        for(const auto& state : states){
-            auto& [pos,nb,nw,nbw] = state;
-            int tscore = _move(nbw, othello::next(turn), search_depth-1);
-            if(score < tscore){
-                score = tscore;
-                result = std::move(nbw);
-            }
-        }
-        return {true, result};
+        auto [score, result] = _move(bw, turn, search_depth);
+        return {find_valid, result};
     }
 };
+
 
 class AlphaBetaPlayer : public othello::Player {
     int search_depth;
     int my_turn = 0;
     int coeff = 0;
+    bool find_valid = false;
+    using scoreBoard = std::tuple<int, othello::Board>;
+
+    scoreBoard _move(const othello::Board& bw, int turn, int depth, int alpha, int beta){
+        auto states = othello::nextStatesOf(bw, turn);
+        //count[search_depth - depth] += 1;
+        if(states.empty() || depth == 0){
+            auto [nb, nw] = othello::count(bw);
+            int score = (nb-nw) * coeff;
+            return {score, bw};
+        }
+        std::shuffle(states.begin(), states.end(), mt); // 乱択性のため
+
+        find_valid = true;
+        othello::Board res;
+        if(turn == my_turn){
+            for(const auto& state : states){
+                auto& [pos,nb,nw,nbw] = state;
+                auto [score, _] = _move(nbw, othello::next(turn), depth-1, alpha, beta);
+                if(alpha < score){
+                    alpha = score;
+                    res = nbw;
+                }
+                if(alpha >= beta) break;
+            }
+            return {alpha, res};
+        } else {
+            for(const auto& state : states){
+                auto& [pos,nb,nw,nbw] = state;
+                auto [score, _] = _move(nbw, othello::next(turn), depth-1, alpha, beta);
+                beta = std::min(beta, score);
+                if(score < beta){
+                    beta = score;
+                    res = nbw;
+                }
+                if(alpha >= beta) break;
+            }
+            return {beta, res};
+        }
+    }
+
     public:
     AlphaBetaPlayer(int depth = 1):search_depth(depth){};
     std::map<int, int> count;
@@ -253,50 +292,11 @@ class AlphaBetaPlayer : public othello::Player {
 
     othello::Result move(const othello::Board& bw, int turn) override {
         my_turn = turn;
-        coeff = (turn == 0) ? 1 : -1;
+        coeff = (turn == 0) ? 1 : -1; // スコアに掛ける係数
+        find_valid = false;
 
-        auto states = othello::nextStatesOf(bw, turn);
-        if(states.empty()) return {false, bw};
-
-        std::shuffle(states.begin(), states.end(), mt);
-
-        othello::Board result;
-        int score = -100;
-        for(const auto& state : states){
-            auto& [pos,nb,nw,nbw] = state;
-            int tscore = move(nbw, othello::next(turn), search_depth-1, -100, 100);
-            if(score < tscore){
-                score = tscore;
-                result = std::move(nbw);
-            }
-        }
-        
-        return {true, result};
-    }
-
-    int move(const othello::Board& bw, int turn, int depth, int alpha, int beta){
-        auto states = othello::nextStatesOf(bw, turn);
-        count[search_depth - depth] += 1;
-        if(states.empty() || depth == 0){
-            auto [nb, nw] = othello::count(bw);
-            int score = (nb-nw) * coeff;
-            return score;
-        }
-        if(turn == my_turn){
-            for(const auto& state : states){
-                auto& [pos,nb,nw,nbw] = state;
-                alpha = std::max(alpha, move(nbw, othello::next(turn), depth-1, alpha, beta));
-                if(alpha >= beta) break;
-            }
-            return alpha;
-        } else {
-            for(const auto& state : states){
-                auto& [pos,nb,nw,nbw] = state;
-                beta = std::min(beta, move(nbw, othello::next(turn), depth-1, alpha, beta));
-                if(alpha >= beta) break;
-            }
-            return beta;
-        }
+        auto [score, result] = _move(bw, turn, search_depth, -100, 100);
+        return {find_valid, result};
     }
 };
 
@@ -381,11 +381,13 @@ void debug(){
 int main(){
     //debug();
     //return 0;
-    std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
+    //std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
+    std::shared_ptr<othello::Player> player1 = std::make_shared<MiniMaxPlayer>(4);
     //std::shared_ptr<othello::Player> player2 = std::make_shared<RandomPlayer>();
-    std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(2);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(2);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(2);
     //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(5);
-    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(6);
+    std::shared_ptr<othello::Player> player2 = std::make_shared<AlphaBetaPlayer>(4);
     //std::shared_ptr<othello::Player> player2 = std::make_shared<BeamSearch>(8);
     int N = 500;
     bool show = false;
@@ -397,7 +399,7 @@ int main(){
         res = othello::game(player2, player1, show);
         res = (res == -1 ? res : ((res+1)&1));
         result[res] += 1;
-        //std::cout << "p1:" << result[0] << ", p2:" << result[1] << ", draw:" << result[-1] << std::endl;
+        std::cout << "p1:" << result[0] << ", p2:" << result[1] << ", draw:" << result[-1] << std::endl;
     }
     std::cout << "p1:" << result[0] << ", p2:" << result[1] << ", draw:" << result[-1] << std::endl;
     auto end = std::chrono::system_clock::now();
