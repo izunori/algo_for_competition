@@ -16,7 +16,7 @@ namespace othello{
     using Result = std::pair<bool, Board>;
     static std::array<btype, GAME_SIZE*GAME_SIZE> buf;
     static Board null = Board{0,0};
-    using State = std::tuple<btype, btype, int, int, Board>;
+    using State = std::tuple<btype, int, int, Board>;
 
     btype getBit(int x, int y){
         return btype(1) << (GAME_SIZE * x + y);
@@ -109,7 +109,7 @@ namespace othello{
                 auto [ok,nbw] = move(bw, turn, x, y);
                 if(ok){
                     auto [nb,nw] = count(nbw);
-                    res.emplace_back(x,y,nb,nw,nbw);
+                    res.emplace_back(getBit(x,y),nb,nw,nbw);
                 }
             }
         }
@@ -168,17 +168,46 @@ class RandomPlayer : public othello::Player {
         auto states = othello::nextStatesOf(bw, turn);
         if(states.empty()) return {false, bw};
         int num = mt() % states.size();
-        auto& [x,y,nb,nw,nbw] = states[num];
+        auto& [pos,nb,nw,nbw] = states[num];
         return {true, nbw};
     }
 };
 
-class MinMaxPlayer : public othello::Player {
+class MiniMaxPlayer : public othello::Player {
     int search_depth;
     int my_turn = 0;
     int coeff = 0;
+    using scoreBoard = std::tuple<int, othello::Board>;
+
+    int _move(const othello::Board& bw, int turn, int depth){
+        auto states = othello::nextStatesOf(bw, turn);
+        count[search_depth - depth] += 1;
+        if(states.empty() || depth == 0){
+            auto [nb, nw] = othello::count(bw);
+            int score = (nb-nw) * coeff;
+            return score;
+        }
+        if(turn == my_turn){
+            int max_score = -100;
+            for(const auto& state : states){
+                auto& [pos,nb,nw,nbw] = state;
+                auto score = _move(nbw, othello::next(turn), depth-1);
+                if(score > max_score) max_score = score;
+            }
+            return max_score;
+        } else {
+            int min_score = 100;
+            for(const auto& state : states){
+                auto& [pos,nb,nw,nbw] = state;
+                int score = _move(nbw, othello::next(turn), depth-1);
+                if(score < min_score) min_score = score;
+            }
+            return min_score;
+        }
+    }
+
     public:
-    MinMaxPlayer(int depth = 1):search_depth(depth){};
+    MiniMaxPlayer(int depth = 1):search_depth(depth){};
     std::map<int, int> count;
     void print(){
         for(int i = 0; i < search_depth; i++){
@@ -198,7 +227,43 @@ class MinMaxPlayer : public othello::Player {
         othello::Board result;
         int score = -100;
         for(const auto& state : states){
-            auto& [x,y,nb,nw,nbw] = state;
+            auto& [pos,nb,nw,nbw] = state;
+            int tscore = _move(nbw, othello::next(turn), search_depth-1);
+            if(score < tscore){
+                score = tscore;
+                result = std::move(nbw);
+            }
+        }
+        return {true, result};
+    }
+};
+
+class AlphaBetaPlayer : public othello::Player {
+    int search_depth;
+    int my_turn = 0;
+    int coeff = 0;
+    public:
+    AlphaBetaPlayer(int depth = 1):search_depth(depth){};
+    std::map<int, int> count;
+    void print(){
+        for(int i = 0; i < search_depth; i++){
+            std::cout << "depth=" << i << ", " << count[i] << std::endl;
+        }
+    }
+
+    othello::Result move(const othello::Board& bw, int turn) override {
+        my_turn = turn;
+        coeff = (turn == 0) ? 1 : -1;
+
+        auto states = othello::nextStatesOf(bw, turn);
+        if(states.empty()) return {false, bw};
+
+        std::shuffle(states.begin(), states.end(), mt);
+
+        othello::Board result;
+        int score = -100;
+        for(const auto& state : states){
+            auto& [pos,nb,nw,nbw] = state;
             int tscore = move(nbw, othello::next(turn), search_depth-1, -100, 100);
             if(score < tscore){
                 score = tscore;
@@ -219,14 +284,14 @@ class MinMaxPlayer : public othello::Player {
         }
         if(turn == my_turn){
             for(const auto& state : states){
-                auto& [x,y,nb,nw,nbw] = state;
+                auto& [pos,nb,nw,nbw] = state;
                 alpha = std::max(alpha, move(nbw, othello::next(turn), depth-1, alpha, beta));
                 if(alpha >= beta) break;
             }
             return alpha;
         } else {
             for(const auto& state : states){
-                auto& [x,y,nb,nw,nbw] = state;
+                auto& [pos,nb,nw,nbw] = state;
                 beta = std::min(beta, move(nbw, othello::next(turn), depth-1, alpha, beta));
                 if(alpha >= beta) break;
             }
@@ -234,6 +299,7 @@ class MinMaxPlayer : public othello::Player {
         }
     }
 };
+
 
 class BeamSearch : public othello::Player {
     int search_depth;
@@ -266,7 +332,7 @@ class BeamSearch : public othello::Player {
         othello::Board result;
         int score = -100;
         for(const auto& state : states){
-            auto& [x,y,nb,nw,nbw] = state;
+            auto& [pos,nb,nw,nbw] = state;
             int tscore = move(nbw, othello::next(turn), search_depth-1, -100, 100);
             if(score < tscore){
                 score = tscore;
@@ -288,7 +354,7 @@ class BeamSearch : public othello::Player {
         if(turn == my_turn){
             if(count[depth] > limit) return alpha;
             for(const auto& state : states){
-                auto& [x,y,nb,nw,nbw] = state;
+                auto& [pos,nb,nw,nbw] = state;
                 alpha = std::max(alpha, move(nbw, othello::next(turn), depth-1, alpha, beta));
                 if(alpha >= beta) break;
             }
@@ -296,7 +362,7 @@ class BeamSearch : public othello::Player {
         } else {
             if(count[depth] > limit) return beta;
             for(const auto& state : states){
-                auto& [x,y,nb,nw,nbw] = state;
+                auto& [pos,nb,nw,nbw] = state;
                 beta = std::min(beta, move(nbw, othello::next(turn), depth-1, alpha, beta));
                 if(alpha >= beta) break;
             }
@@ -308,20 +374,20 @@ class BeamSearch : public othello::Player {
 
 void debug(){
     auto bw = othello::generate();
-    std::shared_ptr<othello::Player> player = std::make_shared<MinMaxPlayer>(2);
+    std::shared_ptr<othello::Player> player = std::make_shared<MiniMaxPlayer>(2);
     player->move(bw, 0);
 }
 
 int main(){
     //debug();
     //return 0;
-    //std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
+    std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
     //std::shared_ptr<othello::Player> player2 = std::make_shared<RandomPlayer>();
-    //std::shared_ptr<othello::Player> player1 = std::make_shared<MinMaxPlayer>(2);
-    std::shared_ptr<othello::Player> player1 = std::make_shared<MinMaxPlayer>(5);
-    //std::shared_ptr<othello::Player> player2 = std::make_shared<MinMaxPlayer>(6);
-    std::shared_ptr<othello::Player> player2 = std::make_shared<BeamSearch>(8);
-    int N = 100;
+    std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(2);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(5);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(6);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<BeamSearch>(8);
+    int N = 500;
     bool show = false;
     std::map<int,int> result;
     auto start = std::chrono::system_clock::now();
@@ -331,8 +397,9 @@ int main(){
         res = othello::game(player2, player1, show);
         res = (res == -1 ? res : ((res+1)&1));
         result[res] += 1;
-        std::cout << "p1:" << result[0] << ", p2:" << result[1] << ", draw:" << result[-1] << std::endl;
+        //std::cout << "p1:" << result[0] << ", p2:" << result[1] << ", draw:" << result[-1] << std::endl;
     }
+    std::cout << "p1:" << result[0] << ", p2:" << result[1] << ", draw:" << result[-1] << std::endl;
     auto end = std::chrono::system_clock::now();
     double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
     std::cout << "elapsed: " << elapsed << "ms" << std::endl ;
