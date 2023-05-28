@@ -172,6 +172,7 @@ class RandomPlayer : public othello::Player {
     }
 };
 
+std::map<int, long> count;
 class MiniMaxPlayer : public othello::Player {
     int search_depth;
     int my_turn = 0;
@@ -181,7 +182,7 @@ class MiniMaxPlayer : public othello::Player {
 
     scoreBoard _move(const othello::Board& bw, int turn, int depth){
         auto states = othello::nextStatesOf(bw, turn);
-        //count[search_depth - depth] += 1;
+        count[search_depth - depth + 1] += 1;
         if(states.empty() || depth == 0){
             auto [nb, nw] = othello::count(bw);
             int score = (nb-nw) * coeff;
@@ -218,9 +219,8 @@ class MiniMaxPlayer : public othello::Player {
 
     public:
     MiniMaxPlayer(int depth = 1):search_depth(depth){};
-    std::map<int, int> count;
     void print(){
-        for(int i = 0; i < search_depth; i++){
+        for(int i = 0; i < search_depth + 3; i++){
             std::cout << "depth=" << i << ", " << count[i] << std::endl;
         }
     }
@@ -245,7 +245,7 @@ class AlphaBetaPlayer : public othello::Player {
 
     scoreBoard _move(const othello::Board& bw, int turn, int depth, int alpha, int beta){
         auto states = othello::nextStatesOf(bw, turn);
-        //count[search_depth - depth] += 1;
+        count[search_depth - depth + 1] += 1;
         if(states.empty() || depth == 0){
             auto [nb, nw] = othello::count(bw);
             int score = (nb-nw) * coeff;
@@ -283,9 +283,8 @@ class AlphaBetaPlayer : public othello::Player {
 
     public:
     AlphaBetaPlayer(int depth = 1):search_depth(depth){};
-    std::map<int, int> count;
     void print(){
-        for(int i = 0; i < search_depth; i++){
+        for(int i = 0; i < search_depth + 2; i++){
             std::cout << "depth=" << i << ", " << count[i] << std::endl;
         }
     }
@@ -381,15 +380,15 @@ void debug(){
 int main(){
     //debug();
     //return 0;
-    //std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
-    std::shared_ptr<othello::Player> player1 = std::make_shared<MiniMaxPlayer>(4);
+    std::shared_ptr<othello::Player> player1 = std::make_shared<RandomPlayer>();
+    //std::shared_ptr<othello::Player> player1 = std::make_shared<MiniMaxPlayer>(4);
     //std::shared_ptr<othello::Player> player2 = std::make_shared<RandomPlayer>();
     //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(2);
-    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(2);
+    //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(6);
     //std::shared_ptr<othello::Player> player2 = std::make_shared<MiniMaxPlayer>(5);
-    std::shared_ptr<othello::Player> player2 = std::make_shared<AlphaBetaPlayer>(4);
+    std::shared_ptr<othello::Player> player2 = std::make_shared<AlphaBetaPlayer>(6);
     //std::shared_ptr<othello::Player> player2 = std::make_shared<BeamSearch>(8);
-    int N = 500;
+    int N = 5;
     bool show = false;
     std::map<int,int> result;
     auto start = std::chrono::system_clock::now();
