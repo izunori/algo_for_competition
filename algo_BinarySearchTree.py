@@ -1,4 +1,4 @@
-from algo_binary_indexed_tree import BinaryIndexedTree
+from algo_BinaryIndexedTree import BinaryIndexedTree
 import bisect
 
 # multiset

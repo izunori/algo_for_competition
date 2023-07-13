@@ -1,16 +1,11 @@
 # Binary Indexed Tree
 class BinaryIndexedTree:
-    def __init__(self,data,op,default):
-        self.op, self.default, N = op, default, len(data)
-        self.l = 2**((N-1).bit_length())
-        self.data = [default]*(self.l+1)
-        for i in range(1,N+1):
-            v = data[i-1]
-            while i <= self.l:
-                self.data[i], i = self.op(self.data[i], v), i+(i&-i)
+    def __init__(self,N,op,default):
+        self.op, self.default, self.N = op, default, N
+        self.data = [0]*(self.N+1)
     def add(self,i,v):
         i += 1
-        while i <= self.l:
+        while i <= self.N:
             self.data[i],i = self.op(self.data[i], v),i+(i&-i)
     # WARNING : return sum of 0<=x<i
     def get(self,i):
@@ -20,12 +15,15 @@ class BinaryIndexedTree:
         return res
 
 def test():
-    bit = BinaryIndexedTree([1,2,3,4,5,6,7],lambda x,y:x+y,0)
+    bit = BinaryIndexedTree(7,lambda x,y:x+y,0)
+    for i in range(8):
+        bit.add(i,i+1)
     bit.add(2,10)
     print(bit.get(1),1)
     print(bit.get(2),3)
     print(bit.get(3),16)
     print(bit.get(4),20)
+    print(bit.get(7),38)
 
 if __name__=='__main__':
     test()
