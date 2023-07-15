@@ -2,12 +2,11 @@ from collections import defaultdict, deque
 # Segment Tree
 class SegmentTree:
     def __init__(self,data,op,default):
-        N = len(data)
-        self.N = N
+        self.N = len(data)
         self.op = op
         self.default = default
         self.l = 2**((N-1).bit_length())
-        self.data = [default]*self.l + data + [default]*(self.l-N)
+        self.data = [default]*self.l + data + [default]*(self.l-self.N)
         for i in range(self.l-1,0,-1):
             self.data[i] = op(self.data[2*i], self.data[2*i+1])
     def set(self,i,val):
@@ -15,19 +14,16 @@ class SegmentTree:
         self.data[i] = val
         i = i//2
         while i > 0:
-            self.data[i] = self.op(self.data[2*i], self.data[2*i+1])
-            i = i//2
+            self.data[i],i = self.op(self.data[2*i], self.data[2*i+1]),i//2
     def get(self,i,j):
         i += self.l
         j += self.l
         s = self.default 
         while j-i > 0:
             if i & 1:
-                s = self.op(s,self.data[i])
-                i += 1
+                s,i = self.op(s,self.data[i]),i+1
             if j & 1:
-                s = self.op(s,self.data[j-1])
-                j -= 1
+                s,j = self.op(s,self.data[j-1]),j-1
             i, j = i//2, j//2
         return s
     
@@ -112,4 +108,5 @@ def perf():
     
 
 if __name__ == '__main__':
+    test()
     perf()
