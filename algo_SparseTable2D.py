@@ -8,42 +8,24 @@ class SparseTable2D:
         self.op = op
         self.nrows = H.bit_length()
         self.ncols = W.bit_length()
-        self.pow = [2**p for p in range(max(self.nrows,self.ncols))] + [0]
+        self.pow = [2**p for p in range(max(self.nrows,self.ncols))]
         self.table = [0]*(self.H*self.W*self.nrows*self.ncols)
-        for x in range(H):
-            for y in range(W):
-                i = y + W*x
-                self.table[i] = data[x][y]
-        step = 1
-        #[print(row) for row in data]
-        #print()
         for row in range(self.nrows):
+            off = N * (self.ncols if row else 1)
             for col in range(self.ncols):
                 if row == col == 0:
+                    for x,y in product(range(H),range(W)):
+                        self.table[y+W*x] = data[x][y]
                     continue
-                #print("C",row,col)
                 i = N*(col+self.ncols*row)
                 for x in range(H):
                     for y in range(W):
                         j = y + W*x
                         if row == 0:
-                            nj = min(y+self.pow[col-1],W-1) + W * min(x+self.pow[row-1],H-1)
+                            nj = min(y+self.pow[col-1],W-1) + W*x
                         else:
-                            nj = min(y,W-1) + W * min(x+self.pow[row-1],H-1)
-                        if row == 0:
-                            off = N
-                        else:
-                            off = N * self.ncols
+                            nj = y + W * min(x+self.pow[row-1],H-1)
                         self.table[i+j] = op(self.table[i+j-off], self.table[i+nj-off])
-                        #print(i+j,i+j-off,i+nj-off)
-                #print()
-        #for i in range(0,len(self.table),N):
-        #    print(self.table[i:i+N])
-
-        #for row in range(1, self.nrows):
-        #    l,r = N*(row-1), N*row-1
-        #    for i in range(N):
-        #        self.table[l+N+i] = op(self.table[l+i], self.table[min(l+i+step,r)])
     def get(self,lx,ly,rx,ry):
         px = (rx-lx).bit_length()-1
         py = (ry-ly).bit_length()-1
