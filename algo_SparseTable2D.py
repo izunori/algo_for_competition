@@ -59,10 +59,8 @@ def test():
     import random
     H = 5
     W = 4
-    random.seed(0)
     data = [[random.randint(0,10) for i in range(W)] for _ in range(H)]
     #[print(row) for row in data]
-    start = time()
     spt = SparseTable2D(data,min)
     for lx in range(H):
         for ly in range(W):
@@ -80,8 +78,17 @@ def test():
                         return
     print('OK')
 
-
-
+def perf():
+    from time import perf_counter as time
+    import random
+    H = 300
+    W = 300
+    random.seed(0)
+    data = [[random.randint(0,10) for i in range(W)] for _ in range(H)]
+    start = time()
+    spt = SparseTable2D(data,min)
+    print(f"{time()-start}") 
 
 if __name__=='__main__':
     test()
+    perf()
