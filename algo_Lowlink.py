@@ -34,14 +34,14 @@ class Lowlink:
         return not (self.low[v] <= self.order[u])
     def isJoint(self, v):
         if v == self.s:
-            return len(self.g[self.s]) != 1
+            return len(self.g[self.s]) == 1
         return any(self.order[v] <= self.low[nv] for nv in self.g[v] if self.parent[v] != nv)
 
 
 def test():
     edges = [
-            [1,5], [1,8], [0,9],
-            [0,1], [1,2], [2,3], [2,4], [2,5], [1,6], [6,7], [6,8], [8,9],
+            (1,5), (1,8), (0,9),
+            (0,1), (1,2), (2,3), (2,4), (2,5), (1,6), (6,7), (6,8), (8,9),
     ]
     g = defaultdict(list)
     for u,v in edges:
@@ -49,6 +49,20 @@ def test():
         g[v].append(u)
     ll = Lowlink(g)
     print(ll.low)
+
+    bridges = []
+    for edge in edges:
+        if ll.isBridge(*edge):
+            bridges.append(edge)
+    print(bridges)
+
+    joints = []
+    for v in range(10):
+        if ll.isJoint(v):
+            joints.append(v)
+    print(joints)
+
+
 
 if __name__=='__main__':
     test()
