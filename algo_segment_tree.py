@@ -5,7 +5,7 @@ class SegmentTree:
         self.N = len(data)
         self.op = op
         self.default = default
-        self.l = 2**((N-1).bit_length())
+        self.l = 2**((self.N-1).bit_length())
         self.data = [default]*self.l + data + [default]*(self.l-self.N)
         for i in range(self.l-1,0,-1):
             self.data[i] = op(self.data[2*i], self.data[2*i+1])
