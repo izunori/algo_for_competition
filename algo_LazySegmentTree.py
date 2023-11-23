@@ -154,6 +154,13 @@ class LazySegmentTree:
                 i *= 2
         return r
 
+def getSetQuery(N,M,Q):
+    samples = [(sorted(random.choices(range(N+1),k=2)), randint(-M,M)) for _ in range(Q)]
+    return samples
+
+def getGetQuery(N,Q):
+    samples = [sorted(random.sample(range(N+1),k=2)) for _ in range(Q)]
+    return samples
 
 def test():
     data = [1]*16
@@ -168,55 +175,72 @@ def test():
     print(seg.data)
 
 def test2():
-    from itertools import combinations
-    from random import choice
-    from random import randint as ri
-    from operator import add
+    print("-- test2: add, add")
+
     N = 10
     M = 10
-    samples = [(choice(list(combinations(range(0,N+1),r=2))),ri(-M,M)) for i in range(M)]
+    Q = 100
+    add = lambda x,y : x+y
+    put = lambda x,y : x
+    ## add on range 
+    ## get sum
+    seg = LazySegmentTree([0]*N, add, 0, add, add, 0, lambda x:x//2, lambda x:x*2)
+
+    samples = getSetQuery(N,M,Q)
+
     data = [0]*N
     for (l,r),v in samples:
         for x in range(l,r):
-            data[x] += v # add pattern
-    seg = LazySegmentTree([0]*N, add, 0, add, add, 0, lambda x:x//2, lambda x:x*2)
-    for (l,r),v in samples:
+            data[x] += v # overwrite pattern
         seg.set(l,r,v)
 
-    samples = [choice(list(combinations(range(0,N+1),r=2))) for i in range(M)]
+    samples = getGetQuery(N,Q)
     for l,r in samples:
-        print(sum(data[l:r]), seg.get(l,r))
+        ans = sum(data[l:r])
+        out = seg.get(l,r)
+        if ans != out:
+            print(data)
+            print([seg.get(i,i+1) for i in range(N)])
+            print('NG')
+            exit()
+    print('OK')
 
 def test3():
-    from itertools import combinations
-    from random import choice
-    from random import randint as ri
-    from operator import add
+    print("-- test3: add, put")
     N = 10
     M = 10
+    Q = 100
     add = lambda x,y : x+y
     put = lambda x,y : x
-    seg = LazySegmentTree([0]*N, add, 0, put, put, 0, lambda x: x//2, lambda x:x*2)
+    invalid = 2**32
+    ## override on range 
+    ## get sum
+    ## lazy_default will be ignored (so on using put set value not used in query)
+    seg = LazySegmentTree([0]*N, add, 0, put, put, invalid, lambda x: x//2, lambda x:x*2)
 
-    samples = [(choice(list(combinations(range(0,N+1),r=2))),ri(-M,M)) for i in range(M)]
+    samples = getSetQuery(N,M,Q)
+
     data = [0]*N
+    random.seed(0)
     for (l,r),v in samples:
         for x in range(l,r):
             data[x] = v # overwrite pattern
-    for (l,r),v in samples:
         seg.set(l,r,v)
 
-    samples = [choice(list(combinations(range(0,N+1),r=2))) for i in range(M)]
+    samples = getGetQuery(N,Q)
     for l,r in samples:
-        print(sum(data[l:r]), seg.get(l,r))
+        ans = sum(data[l:r])
+        out = seg.get(l,r)
+        if ans != out:
+            #print(data)
+            #print([seg.get(i,i+1) for i in range(N)])
+            print('NG')
+            exit()
+    print('OK')
 
 def test4():
-    from itertools import combinations
-    from random import choice
-    from random import randint as ri
-    from operator import add
-    N = 8
-    M = 8
+    N = 10
+    M = 10
     add = lambda x,y : x+y
     seg = LazySegmentTree([0]*N, add, 0, add, add, 0, lambda x: x//2, lambda x:x*2)
 
@@ -229,7 +253,13 @@ def test4():
     print(    [seg.get(i,i+1) for i in range(8)])
 
 if __name__ == '__main__':
+    from itertools import combinations
+    import random
+    from random import choice
+    from random import randint
+    from operator import add
     #test()
     test2()
-    #est4()
+    test3()
+    #test4()
 
