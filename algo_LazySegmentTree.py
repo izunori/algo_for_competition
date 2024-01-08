@@ -36,6 +36,7 @@ class LazySegmentTree:
             res.append(l)
             l >>= 1
         return res
+    # memo: unfold update make very fast
     def update(self,u):
         if not self.lazy[u] == self.lazy_default:
             if u < self.L:
@@ -162,17 +163,38 @@ def getGetQuery(N,Q):
     samples = [sorted(random.sample(range(N+1),k=2)) for _ in range(Q)]
     return samples
 
-def test():
-    data = [1]*16
-    seg = LazySegmentTree(data, max, 0, lambda x,p : p, lambda p,q : q, None)
-    print(seg.data)
-    seg.set(0, 4, 10)
-    print(seg.data)
-    print("CHEK")
-    print(seg.get(0, 1))
-    print(seg.get(2, 3))
-    print(seg.lazy)
-    print(seg.data)
+def test1():
+    print("-- test1: max, add")
+
+    N = 8 
+    M = 10
+    Q = 100
+    add = lambda x,y : x+y
+    put = lambda x,y : x
+    ## add on range 
+    ## get sum
+    inf = 2**62
+    ## range sum, range max
+    seg = LazySegmentTree([0]*N, max, -inf, add, add, 0, lambda x:x, lambda x:x)
+
+    samples = getSetQuery(N,M,Q)
+
+    data = [0]*N
+    for (l,r),v in samples:
+        for x in range(l,r):
+            data[x] += v # overwrite pattern
+        seg.set(l,r,v)
+
+    samples = getGetQuery(N,Q)
+    for l,r in samples:
+        ans = max(data[l:r])
+        out = seg.get(l,r)
+        if ans != out:
+            print(l,r)
+            print(ans,out)
+            print('NG')
+            return
+    print('OK')
 
 def test2():
     print("-- test2: add, add")
@@ -202,12 +224,12 @@ def test2():
             print(data)
             print([seg.get(i,i+1) for i in range(N)])
             print('NG')
-            exit()
+            return
     print('OK')
 
 def test3():
     print("-- test3: add, put")
-    N = 10
+    N = 100
     M = 10
     Q = 100
     add = lambda x,y : x+y
@@ -235,11 +257,11 @@ def test3():
             #print(data)
             #print([seg.get(i,i+1) for i in range(N)])
             print('NG')
-            exit()
+            return
     print('OK')
 
 def test4():
-    N = 10
+    N = 100
     M = 10
     add = lambda x,y : x+y
     seg = LazySegmentTree([0]*N, add, 0, add, add, 0, lambda x: x//2, lambda x:x*2)
@@ -258,7 +280,7 @@ if __name__ == '__main__':
     from random import choice
     from random import randint
     from operator import add
-    #test()
+    test1()
     test2()
     test3()
     #test4()
