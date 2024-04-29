@@ -17,7 +17,7 @@
 #define rep(i, n) for (int i = 0; i < (int)n; i++)
 #define rep2(i,j,n) for (int i = 0; i < (int)n; i++) for (int j = 0; j < (int)n; j++)
 #define rep3(i,j,k,n) for (int i = 0; i < (int)n; i++) for (int j = 0; j < (int)n; j++) for (int k= 0; k < (int)n; k++)
-#define all(v) v.begin(),v.end()
+//#define all(v) v.begin(),v.end()
 
 template<typename T>
 using vec = std::vector<T>;
@@ -67,3 +67,6 @@ void dprint(const T&... rest){
     std::cout << "\n";
 }
 
+double getElapsed(clk::time_point& start, clk::time_point& end){
+    return (std::chrono::duration<double, std::milli>(end-start)).count() / 1000;
+}
