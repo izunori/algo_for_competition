@@ -30,7 +30,7 @@ public:
         id = _index;
         _index++;
         //dprint("create", id, this);
-        buf = (T*)std::calloc(r*c, sizeof(T));
+        buf = (T*)std::malloc((r*c) * sizeof(T));
         data = (T**)std::malloc(r * sizeof(T*));
         rep(i,r) data[i] = buf + i * c;
     }
@@ -40,13 +40,13 @@ public:
         buf = rhs.buf; rhs.buf = nullptr;
         data = rhs.data; rhs.data = nullptr;
     }
-    Mat& operator=(const Mat&& rhs){
+    Mat& operator=(Mat&& rhs){
         r = rhs.r; c = rhs.c;
         //dprint("substitute", this, &rhs, r, c);
-        buf = (T*)std::malloc((r*c) * sizeof(T));
-        std::memcpy(buf, rhs.buf, r*c*sizeof(T*));
-        data = (T**)std::malloc(r * sizeof(T*));
-        rep(i,r) data[i] = buf + i * c;
+        buf = rhs.buf;
+        data = rhs.data;
+        rhs.buf = nullptr;
+        rhs.data = nullptr;
         return *this;
     }
     Mat(const Mat &rhs){
@@ -73,9 +73,11 @@ public:
         //dprint("prod", &res);
         rep(x,r){
             rep(y,rhs.c){
+                T t = 0;
                 rep(i,c){
-                    res.data[x][y] += data[x][i] * rhs.data[i][y];
+                    t += data[x][i] * rhs.data[i][y];
                 }
+                res.data[x][y] = t;
             }
         }
         return res;
@@ -85,8 +87,8 @@ public:
 int main(){
     using Eigen::MatrixXd;
 
-    int M = 100;
-    int Q = 100;
+    int M = 200;
+    int Q = 10;
     Eigen::MatrixXd m = MatrixXd::Random(M,M);
     Eigen::MatrixXd m2 = MatrixXd::Random(M,M);
     {
