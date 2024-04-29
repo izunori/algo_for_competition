@@ -16,16 +16,61 @@
 #include"dprint.h"
 #include<Eigen/Dense>
 
+int _index = 0;
+
 template<typename T>
 class Mat{
-    public:
-    T r,c;
-    vec2<T> data;
+public:
+    int id = 0;
+    int r,c;
+    //vec2<T> data;
+    T** data = nullptr;
+    T* buf = nullptr;
     Mat(int r, int c):r(r),c(c){
-        data = vec2<T>(r, vec<T>(c));
+        id = _index;
+        _index++;
+        //dprint("create", id, this);
+        buf = (T*)std::calloc(r*c, sizeof(T));
+        data = (T**)std::malloc(r * sizeof(T*));
+        rep(i,r) data[i] = buf + i * c;
     }
-    Mat prod(Mat& rhs){
+    Mat(Mat && rhs){
+        //dprint("Move");
+        r = rhs.r; c = rhs.c;
+        buf = rhs.buf; rhs.buf = nullptr;
+        data = rhs.data; rhs.data = nullptr;
+    }
+    Mat& operator=(const Mat&& rhs){
+        r = rhs.r; c = rhs.c;
+        //dprint("substitute", this, &rhs, r, c);
+        buf = (T*)std::malloc((r*c) * sizeof(T));
+        std::memcpy(buf, rhs.buf, r*c*sizeof(T*));
+        data = (T**)std::malloc(r * sizeof(T*));
+        rep(i,r) data[i] = buf + i * c;
+        return *this;
+    }
+    Mat(const Mat &rhs){
+        r = rhs.r; c = rhs.c;
+        //dprint("copy", this, &rhs, r, c);
+        buf = (T*)std::malloc((r*c) * sizeof(T));
+        std::memcpy(buf, rhs.buf, (r*c)*sizeof(T));
+        data = (T**)std::malloc(r * sizeof(T*));
+        rep(i,r) data[i] = buf + i * c;
+    }
+    ~Mat(){
+        //dprint("destroy", id, this, buf);
+        if(buf != nullptr){
+            std::free(buf);
+            buf = nullptr;
+        }
+        if(data != nullptr){
+            std::free(data);
+            data = nullptr;
+        }
+    }
+    Mat prod(const Mat& rhs){
         Mat res(r, rhs.c);
+        //dprint("prod", &res);
         rep(x,r){
             rep(y,rhs.c){
                 rep(i,c){
@@ -40,8 +85,8 @@ class Mat{
 int main(){
     using Eigen::MatrixXd;
 
-    int M = 1000;
-    int Q = 10;
+    int M = 100;
+    int Q = 100;
     Eigen::MatrixXd m = MatrixXd::Random(M,M);
     Eigen::MatrixXd m2 = MatrixXd::Random(M,M);
     {
@@ -56,6 +101,7 @@ int main(){
         dprint(m3(0,0));
         dprint(getElapsed(start_time, end_time));
     }
+
     {
         Mat<double> mm(M,M);
         Mat<double> mm2(M,M);
