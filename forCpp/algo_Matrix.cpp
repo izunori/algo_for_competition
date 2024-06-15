@@ -22,19 +22,14 @@
 #include"dprint.h"
 #include<Eigen/Dense>
 
-int _index = 0;
-
 template<typename T>
 class Mat{
 public:
-    int id = 0;
     int r,c;
     //vec2<T> data;
     //T** data = nullptr;
     T* buf = nullptr;
     Mat(int r, int c):r(r),c(c){
-        id = _index;
-        _index++;
         //dprint("create", id, this);
         buf = (T*)std::calloc((r*c), sizeof(T));
         //data = (T**)std::malloc(r * sizeof(T*));
@@ -65,7 +60,7 @@ public:
     }
     ~Mat(){
         if(buf != nullptr){
-            dprint("destroy", id, this, buf);
+            dprint("destroy", this, buf);
             std::free(buf);
             buf = nullptr;
         }
@@ -80,7 +75,7 @@ public:
         rep(x,r){
             rep(i,c){
                 rep(y,rhs.c){
-                    res.buf[x*rhs.c + y] += buf[c*x+ i] * rhs.buf[rhs.c * i + y];
+                    res.buf[x * rhs.c + y] += buf[c*x+ i] * rhs.buf[rhs.c * i + y];
                 }
             }
         }

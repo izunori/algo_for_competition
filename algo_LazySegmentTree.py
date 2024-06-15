@@ -164,7 +164,7 @@ def getGetQuery(N,Q):
     return samples
 
 def test1():
-    print("-- test1: max, add")
+    print("-- test1: get max, set add")
 
     N = 8 
     M = 10
@@ -197,7 +197,7 @@ def test1():
     print('OK')
 
 def test2():
-    print("-- test2: add, add")
+    print("-- test2: get add(sum), set add")
 
     N = 10
     M = 10
