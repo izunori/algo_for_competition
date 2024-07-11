@@ -74,6 +74,7 @@ class Treap:
         lt,rt = self.split(self.root, k)
         _,rt = self.split(rt, k+1)
         self.root = self.merge(lt, rt)
+        return self
     def findIndex(self, k):
         lt, rt = self.split(self.root, k)
         rlt, rrt = self.split(rt, k+1)
@@ -259,4 +260,4 @@ if __name__=='__main__':
     #testPerf()
     test()
     testRandom()
-    perf()
+    #perf()
