@@ -55,11 +55,11 @@ public:
         int ry = root(y);
         if(rx == ry) return false;
         if(rank[rx] > rank[ry]){
-            parent[y] = rx;
+            parent[ry] = rx;
         } else if (rank[rx] < rank[ry]){
-            parent[x] = ry;
+            parent[rx] = ry;
         } else {
-            parent[x] = ry;
+            parent[rx] = ry;
             rank[ry] += 1;
         }
         return true;
@@ -67,12 +67,18 @@ public:
 };
 
 int main(){
-    auto uf = UnionFind(10);
+    auto uf = UnionFind2(10);
     uf.unit(0,8);
     uf.unit(0,7);
     uf.unit(1,5);
+    uf.unit(8,5);
+    uf.unit(2,6);
     std::cout << "1=" << uf.find(7,8) << std::endl;
-    std::cout << "0=" << uf.find(1,8) << std::endl;
+    std::cout << "1=" << uf.find(1,8) << std::endl;
     std::cout << "1=" << uf.find(1,5) << std::endl;
+    std::cout << "0=" << uf.find(2,5) << std::endl;
+    std::cout << "1=" << uf.find(2,6) << std::endl;
+    std::cout << "0=" << uf.find(2,4) << std::endl;
+    std::cout << "1=" << uf.find(5,7) << std::endl;
 }
 
