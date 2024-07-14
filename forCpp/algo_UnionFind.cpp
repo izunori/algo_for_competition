@@ -48,7 +48,7 @@ public:
         return rt;
     }
     bool find(int x, int y){
-        return parent[x] == parent[y];
+        return root(x) == root(y);
     }
     bool unit(int x, int y){
         int rx = root(x);
