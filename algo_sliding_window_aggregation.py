@@ -1,10 +1,13 @@
+from operator import add, mul, itemgetter
+from functools import reduce
 class SlidingWindowAggregation:
-    def __init__(self,op):
+    def __init__(self,op,e):
         self.front = []
         self.front_sum = []
         self.back = []
         self.back_sum = []
         self.op = op
+        self.e = e
     def fold_all(self):
         if self.front and self.back:
             return self.op(self.front_sum[-1],self.back_sum[-1])
@@ -13,7 +16,7 @@ class SlidingWindowAggregation:
         elif self.back:
             return self.back_sum[-1]
         else:
-            return None
+            return self.e
     def push(self,x):
         self.back.append(x)
         if self.back_sum:
@@ -31,7 +34,7 @@ class SlidingWindowAggregation:
         if self.front:
             self.front_sum.pop()
             return self.front.pop()
-        return None
+        return self.e
     def debug(self):
         print("front   :",self.front)
         print("frontsum:",self.front_sum)
@@ -39,7 +42,7 @@ class SlidingWindowAggregation:
         print("backsum :",self.back_sum)
 
 def test():
-    swa = SlidingWindowAggregation(lambda x,y : x+y)
+    swa = SlidingWindowAggregation(lambda x,y : x+y, 0)
     for i in range(1,11):
         swa.push(i)
     swa.debug()
@@ -64,7 +67,44 @@ def test():
     swa.debug()
     print(swa.fold_all(),100)
 
+def test2():
+    import random
+    N = 1000
+    M = 1000
+    Q = 100
+    A = [random.randint(0,M) for _ in range(N)]
+
+    L = sorted(random.randint(0,N) for _ in range(Q))
+    R = sorted(random.randint(0,N) for _ in range(Q))
+    LR = [sorted([l,r]) for l,r in zip(L,R)]
+
+    op = max
+    e = 0 # もし単位元がないならNoneを入れればOK
+
+    ans = []
+    for l,r in LR:
+        ans.append(reduce(op, A[l:r], e))
+
+    swag = SlidingWindowAggregation(op,e)
+    submit = []
+    pl,pr = 0,0
+    for l,r in LR:
+        for i in range(pr,r):
+            swag.push(A[i])
+        for i in range(pl,l):
+            swag.pop()
+        submit.append(swag.fold_all())
+        pl,pr = l,r
+
+    if ans == submit:
+        print("OK")
+    else:
+        print("NG")
+        print(A)
+        print(LR)
 
 if __name__=='__main__':
-    test()
+    #test()
+    test2()
+
 
