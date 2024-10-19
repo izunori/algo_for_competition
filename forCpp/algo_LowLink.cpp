@@ -61,10 +61,14 @@ struct LowLink{
                 st.push_back(nv);
             }
         }
+        cnt = 0;
         for(const auto nv : g[0]){
-            if(ord[nv] > g[0].size()){
-                joints.push_back(0);
-                break;
+            if(par[nv] == 0){
+                ++cnt;
+                if(cnt == 2){
+                    joints.push_back(0);
+                    break;
+                }
             }
         }
     }
@@ -72,8 +76,9 @@ struct LowLink{
 
 int main(){
     //vec2<int> g{{1,4},{0,2,3},{1,3},{1,2},{0,5},{4}}; // [0,1,4]
-    //vec2<int> g{{1},{0,2},{1,3},{2}}; // [1,2]
-    vec2<int> g{{1,2},{0,2},{0,1}}; // []
+    vec2<int> g{{1},{0,2},{1,3},{2}}; // [1,2]
+    //vec2<int> g{{1,3},{0,2},{1,3},{0,2}}; // []
+    //vec2<int> g{{1,2,3,4},{0,2},{0,1},{0,4},{0,3}}; // []
     auto link = LowLink(g);
     dprint("ord",link.ord);
     dprint("low",link.low);
