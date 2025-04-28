@@ -9,7 +9,6 @@ public:
     std::function<T(T,T)> op;
     T e;
     size_t L;
-
     SegmentTree(std::vector<T> v, std::function<T(T,T)> op, T e):op(op),e(e){
         N = v.size();
         L = std::bit_ceil(N);
@@ -20,7 +19,6 @@ public:
             data[i] = op(data[i<<1], data[(i<<1)+1]);
         }
     }
-
     void set(int i, T val){
         i += L;
         data[i] = val;
@@ -30,7 +28,6 @@ public:
             i >>= 1;
         }
     }
-
     T get(int i, int j){
         i += L; j += L;
         T s = e;

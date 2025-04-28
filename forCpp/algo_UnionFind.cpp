@@ -64,6 +64,9 @@ public:
         }
         return true;
     }
+    int count(int x){
+        return -buf[root(x)];
+    }
 };
 
 int main(){

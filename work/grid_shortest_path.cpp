@@ -250,6 +250,55 @@ void bfs2D(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
     dprint("bfs2D:", elapsed);
 }
 
+void bfs1D(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
+    auto start_time = clk::now();
+
+    vec<i2> sts1d;
+    for(const auto& [s,t] : sts){
+        const auto& [sx,sy] = s;
+        const auto& [tx,ty] = t;
+        sts1d.emplace_back(sx*L + sy, tx*L + ty);
+    }
+    vec2<int> graph(L*L);
+    rep(x,L){
+        rep(y,L){
+            int v = x*L + y;
+            for(const auto& [dx,dy] : dirs){
+                int nx = x+dx;
+                int ny = y+dy;
+                if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
+                int nv = nx*L + ny;
+                graph[v].push_back(nv);
+            }
+        }
+    }
+
+    rep(m,M){
+        const auto& [s,t] = sts1d[m];
+        std::deque<int> dq;
+        dq.emplace_back(s);
+        vec<int> dist(L*L, inf);
+        dist[s] = 0;
+        while(!dq.empty()){
+            const auto v = dq.front();
+            dq.pop_front();
+            if(v == t){
+                break;
+            }
+            for(const auto nv : graph[v]){
+                if(dist[v] + 1 < dist[nv]){
+                    dist[nv] = dist[v] + 1;
+                    dq.emplace_back(nv);
+                }
+            }
+        }
+        assert(dist[t] == ans[m]);
+    }
+    auto end_time = clk::now();
+    double elapsed = getElapsed(start_time, end_time);
+    dprint("bfs1D:", elapsed);
+}
+
 int main(){
     std::vector<std::pair<i2,i2>> sts;
     for(int m : std::views::iota(0,M)){
@@ -266,6 +315,7 @@ int main(){
         ans.push_back(std::abs(sx-tx) + std::abs(sy-ty));
     }
     bfs2D(sts, ans);
+    bfs1D(sts, ans);
     
     deconstruct();
     return 0;
