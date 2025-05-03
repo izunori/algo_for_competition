@@ -210,7 +210,7 @@ void deconstruct(){
 // main
 
 constexpr int L = 200;
-constexpr int M = 10000;
+constexpr int M = 2000;
 constexpr int inf = 1<<30;
 const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
 
@@ -352,6 +352,86 @@ void bfs1DStaticDist(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
     dprint("bfs1D:", elapsed);
 }
 
+int index(int x, int y){
+    return x*L + y;
+}
+i2 pos(int i){
+    return {i/L, i%L};
+}
+
+int h(int v){
+    // sholt be 0 <= h(v) <= true h(v)
+    const auto [x,y] = pos(v);
+    int nx = L/2;
+    int ny = L/2;
+    return (std::abs(x-nx) + std::abs(y-ny))/2;
+}
+
+int cost(int v, int nv){
+    const auto [x,y] = pos(v);
+    const auto [nx,ny] = pos(nv);
+    return std::abs(x-nx) + std::abs(y-ny);
+}
+
+
+void bfs1DAstar(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
+    auto start_time = clk::now();
+
+    vec<i2> sts1d;
+    for(const auto& [s,t] : sts){
+        const auto& [sx,sy] = s;
+        const auto& [tx,ty] = t;
+        sts1d.emplace_back(sx*L + sy, tx*L + ty);
+    }
+    vec2<int> graph(L*L);
+    rep(x,L){
+        rep(y,L){
+            int v = x*L + y;
+            for(const auto& [dx,dy] : dirs){
+                int nx = x+dx;
+                int ny = y+dy;
+                if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
+                int nv = nx*L + ny;
+                graph[v].push_back(nv);
+            }
+        }
+    }
+
+    vec<bool> isClose(L*L,false);
+    vec<int> f(L*L,inf);
+    std::priority_queue<i2,vec<i2>,std::greater<i2>> open;
+
+    rep(m,M){
+        std::fill(all(isClose), false);
+        std::fill(all(f), inf);
+        const auto& [s,t] = sts1d[m];
+        f[s] = h(s);
+        open.emplace(f[s],s);
+        while(!open.empty()){
+            const auto [fv,v] = open.top();
+            open.pop();
+            if(f[v] < fv || isClose[v]) continue;
+            if(v == t) break;
+            isClose[v] = true;
+            for(const auto nv : graph[v]){
+                int fnv = (f[v] - h(v)) + cost(v,nv) + h(nv);
+                open.emplace(fnv, nv);
+                if(fnv < f[nv]){
+                    f[nv] = fnv;
+                    if(isClose[nv]){
+                        isClose[nv] = false;
+                    }
+                }
+            }
+        }
+        assert(f[t] == ans[m]);
+    }
+
+    auto end_time = clk::now();
+    double elapsed = getElapsed(start_time, end_time);
+    dprint("bfs1DAstar:", elapsed);
+}
+
 int main(){
     std::vector<std::pair<i2,i2>> sts;
     for(int m : std::views::iota(0,M)){
@@ -370,6 +450,7 @@ int main(){
     bfs2D(sts, ans);
     bfs1D(sts, ans);
     bfs1DStaticDist(sts, ans);
+    bfs1DAstar(sts, ans);
     
     deconstruct();
     return 0;
