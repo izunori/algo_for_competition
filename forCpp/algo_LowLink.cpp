@@ -26,7 +26,7 @@ struct LowLink{
         low.assign(g.size(), 0);
         par.assign(g.size(), -1);
         visited.assign(g.size(), 0);
-
+        joints = vec<int>(g.size(), false);
 
         vec<int> st(1,0); // root: 0
         in_work[0] = true;
@@ -46,7 +46,7 @@ struct LowLink{
                         if(low[v] > ord[nv]) low[v] = ord[nv];
                     }
                 }
-                if(is_joint) joints.push_back(v);
+                if(is_joint) joints[v] = true;
                 in_work[v] = false;
                 continue;
             }
@@ -66,21 +66,32 @@ struct LowLink{
             if(par[nv] == 0){
                 ++cnt;
                 if(cnt == 2){
-                    joints.push_back(0);
+                    joints[0] = true;
                     break;
                 }
             }
         }
     }
+    bool is_joint(int v){
+        return joints[v];
+    }
+    bool is_bridge(int v, int u){
+        return (ord[u] < low[v] || ord[v] < low[u]);
+    }
 };
 
 int main(){
     //vec2<int> g{{1,4},{0,2,3},{1,3},{1,2},{0,5},{4}}; // [0,1,4]
-    vec2<int> g{{1},{0,2},{1,3},{2}}; // [1,2]
+    vec2<int> g{{1,4},{0,2,4},{1,3},{2},{0,1}}; // [1,2]
     //vec2<int> g{{1,3},{0,2},{1,3},{0,2}}; // []
     //vec2<int> g{{1,2,3,4},{0,2},{0,1},{0,4},{0,3}}; // []
     auto link = LowLink(g);
     dprint("ord",link.ord);
     dprint("low",link.low);
     dprint(link.joints);
+    rep(v, g.size()){
+        for(int u : g[v]){
+            dprint(v,u,link.is_bridge(u,v));
+        }
+    }
 }
