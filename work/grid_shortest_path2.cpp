@@ -448,6 +448,7 @@ vec2<uint32_t> bfs(vec2<int>& field, i2 s){
             int nx = x + dx;
             int ny = y + dy;
             if(nx < 0 || size <= nx || ny < 0 || size <= ny) continue;
+            if(field[nx][ny]) continue;
             if(dist[x][y] + 1 < dist[nx][ny]){
                 dist[nx][ny] = dist[x][y] + 1;
                 dq.emplace_back(nx,ny);
@@ -488,6 +489,7 @@ vec2<int> make1dGraph(vec2<int>& field){
                 int nx = x + dx;
                 int ny = y + dy;
                 if(nx < 0 || size <= nx || ny < 0 || size <= ny) continue;
+                if(field[nx][ny]) continue;
                 int nv = size*nx + ny;
                 result[v].push_back(nv);
             }
@@ -499,22 +501,37 @@ vec2<int> make1dGraph(vec2<int>& field){
 int main(){
     size_t L = 64;
     vec<vec<int>> field(L, vec<int>(L, 0));
+    const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
+    rep(i,5){
+        int x = randint(L);
+        int y = randint(L);
+        const auto [dx,dy] = dirs[randint(dirs.size())];
+        while(0<=x && x < L && 0<= y && y < L){
+            if(field[x][y] == 1) break;
+            field[x][y] = 1;
+            x += dx; y += dy;
+        }
+    }
+    for(const auto row : field) dprint(row);
+
     auto graph = make1dGraph(field);
 
     {
         auto start_time = clk::now();
+        vec2<uint32_t> dist;
         rep(x,L){
             rep(y,L){
-                bfs(field, i2{x,y});
+                dist = bfs(field, i2{x,y});
             }
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
     {
+        vec<uint32_t> dist;
         auto start_time = clk::now();
         rep(v,L*L){
-            bfs(graph, v);
+            dist = bfs(graph, v);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
