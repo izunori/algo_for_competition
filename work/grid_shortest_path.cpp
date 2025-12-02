@@ -1,9 +1,9 @@
-#pragma GCC optimize("O3,inline")
-#pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
-#pragma GCC optimize("unroll-loops")
-#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,tune=native")
-#pragma GCC target("movbe")
-#pragma GCC target("aes,pclmul,rdrnd")
+//#pragma GCC optimize("O3,inline")
+//#pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
+//#pragma GCC optimize("unroll-loops")
+//#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,tune=native")
+//#pragma GCC target("movbe")
+//#pragma GCC target("aes,pclmul,rdrnd")
 #include<iostream>
 #include<fstream>
 #include<vector>
@@ -48,7 +48,7 @@ using i2 = std::pair<int,int>;
 template<typename T>
 using t3 = std::tuple<T, T, T>;
 using i3 = t3<int>;
-using clk = std::chrono::system_clock;
+using clk = std::chrono::steady_clock;
 
 template<int k>
 const double p10_k = std::pow(10, k);
