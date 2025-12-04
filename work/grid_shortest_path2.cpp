@@ -499,9 +499,45 @@ vec2<int> make1dGraph(vec2<int>& field){
 }
 
 std::bitset<100*100> makeBitBoard(const vec2<int>& field){
-
     std::bitset<100*100> result;
+    size_t size = field.size();
+    rep(x, size){
+        rep(y, size){
+            if(field[x][y] == 1){
+                result.set(x * size + y);
+            }
+        }
+    }
     return result;
+}
+
+vec<uint32_t> bfsBitBoard(const std::bitset<100*100>& bitboard, int s, size_t size){
+    uint32_t inf = 1<<20;
+    std::deque<int> dq;
+    dq.push_back(s);
+    vec<uint32_t> dist(size * size, inf);
+    dist[s] = 0;
+    static const vec<i2> dirs = {{1,0},{0,1},{-1,0},{0,-1}};
+    
+    while(!dq.empty()){
+        const auto v = dq.front();
+        dq.pop_front();
+        int x = v / size;
+        int y = v % size;
+        
+        for(const auto& [dx,dy] : dirs){
+            int nx = x + dx;
+            int ny = y + dy;
+            if(nx < 0 || size <= nx || ny < 0 || size <= ny) continue;
+            int nv = nx * size + ny;
+            if(bitboard.test(nv)) continue;  // 障害物チェック
+            if(dist[v] + 1 < dist[nv]){
+                dist[nv] = dist[v] + 1;
+                dq.push_back(nv);
+            }
+        }
+    }
+    return dist;
 }
 
 int main(){
