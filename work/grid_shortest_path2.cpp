@@ -55,6 +55,8 @@ const double p10_k = std::pow(10, k);
 
 // global
 
+constexpr size_t BIT_SIZE = 100*100;
+
 constexpr bool local = true;
 std::map<std::string, std::string> LOG;
 
@@ -498,8 +500,8 @@ vec2<int> make1dGraph(vec2<int>& field){
     return result;
 }
 
-std::bitset<100*100> makeBitBoard(const vec2<int>& field){
-    std::bitset<100*100> result;
+std::bitset<BIT_SIZE> makeBitBoard(const vec2<int>& field){
+    std::bitset<BIT_SIZE> result;
     size_t size = field.size();
     rep(x, size){
         rep(y, size){
@@ -511,7 +513,7 @@ std::bitset<100*100> makeBitBoard(const vec2<int>& field){
     return result;
 }
 
-vec<uint32_t> bfsBitBoard(const std::bitset<100*100>& bitboard, int s, size_t size){
+vec<uint32_t> bfsBitBoard(const std::bitset<BIT_SIZE>& bitboard, int s, size_t size){
     uint32_t inf = 1<<20;
     std::deque<int> dq;
     dq.push_back(s);
@@ -575,6 +577,15 @@ int main(){
         auto start_time = clk::now();
         rep(v,L*L){
             dist = bfs(graph, v);
+        }
+        auto end_time = clk::now();
+        dprint("elapsed:", getElapsed(start_time, end_time));
+    }
+    {
+        vec<uint32_t> dist;
+        auto start_time = clk::now();
+        rep(v,L*L){
+            dist = bfsBitBoard(bit_board, v, L);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
