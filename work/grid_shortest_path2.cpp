@@ -513,6 +513,19 @@ std::bitset<BIT_SIZE> makeBitBoard(const vec2<int>& field){
     return result;
 }
 
+void printBitBoard(const std::bitset<BIT_SIZE>& bitboard, size_t size){
+    if(!local) return;
+    std::cerr << "BitBoard (" << size << "x" << size << "):\n";
+    rep(x, size){
+        rep(y, size){
+            size_t pos = x * size + y;
+            std::cerr << (bitboard.test(pos) ? '#' : '.');
+        }
+        std::cerr << "\n";
+    }
+    std::cerr << "\n";
+}
+
 vec<uint32_t> bfsBitBoard(const std::bitset<BIT_SIZE>& bitboard, int s, size_t size){
     uint32_t inf = 1<<20;
     std::deque<int> dq;
@@ -520,30 +533,24 @@ vec<uint32_t> bfsBitBoard(const std::bitset<BIT_SIZE>& bitboard, int s, size_t s
     vec<uint32_t> dist(size * size, inf);
     dist[s] = 0;
     static const vec<i2> dirs = {{1,0},{0,1},{-1,0},{0,-1}};
+
+    auto temp_board = std::bitset<BIT_SIZE>();
+    temp_board.set(s);
     
-    while(!dq.empty()){
-        const auto v = dq.front();
-        dq.pop_front();
-        int x = v / size;
-        int y = v % size;
-        
-        for(const auto& [dx,dy] : dirs){
-            int nx = x + dx;
-            int ny = y + dy;
-            if(nx < 0 || size <= nx || ny < 0 || size <= ny) continue;
-            int nv = nx * size + ny;
-            if(bitboard.test(nv)) continue;  // 障害物チェック
-            if(dist[v] + 1 < dist[nv]){
-                dist[nv] = dist[v] + 1;
-                dq.push_back(nv);
-            }
-        }
+    vec<std::bitset<BIT_SIZE>> history;
+    history.push_back(temp_board);
+    rep(i,10){
+        temp_board |= temp_board>>1 | temp_board<<1 | temp_board<<size | temp_board>>size;
+        temp_board ^= bitboard & temp_board;
+        //printBitBoard(temp_board, size);
+        history.push_back(temp_board);
     }
+    exit(0);
     return dist;
 }
 
 int main(){
-    constexpr size_t L = 64;
+    constexpr size_t L = 8;
     vec<vec<int>> field(L, vec<int>(L, 0));
     const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
     rep(i,5){
