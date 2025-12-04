@@ -55,7 +55,12 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t BIT_SIZE = 100*100;
+constexpr size_t L = 64;
+constexpr size_t BIT_SIZE = L*L;
+auto right_guard = std::bitset<BIT_SIZE>();
+auto left_guard = std::bitset<BIT_SIZE>();
+auto upper_guard = std::bitset<BIT_SIZE>();
+auto lower_guard = std::bitset<BIT_SIZE>();
 
 constexpr bool local = true;
 std::map<std::string, std::string> LOG;
@@ -211,241 +216,21 @@ void deconstruct(){
 
 // main
 
-constexpr int L = 200;
-constexpr int M = 2000;
-constexpr int inf = 1<<30;
-const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
 
-std::uniform_int_distribution<int> dist(0, L-1);
-
-void bfs2D(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
-    auto start_time = clk::now();
-
-    rep(m,M){
-        const auto& [s,t] = sts[m];
-        const auto& [sx,sy] = s;
-        const auto& [tx,ty] = t;
-        std::deque<i2> dq;
-        dq.emplace_back(sx,sy);
-        vec2<int> dist(L, vec<int>(L, inf));
-        dist[sx][sy] = 0;
-        while(!dq.empty()){
-            const auto [x,y] = dq.front();
-            dq.pop_front();
-            if(x == tx && y == ty){
-                break;
-            }
-            for(const auto& [dx,dy] : dirs){
-                int nx = x+dx;
-                int ny = y+dy;
-                if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
-                if(dist[x][y] + 1 < dist[nx][ny]){
-                    dist[nx][ny] = dist[x][y] + 1;
-                    dq.emplace_back(nx,ny);
-                }
-            }
-        }
-        assert(dist[tx][ty] == ans[m]);
-    }
-    auto end_time = clk::now();
-    double elapsed = getElapsed(start_time, end_time);
-    dprint("bfs2D:", elapsed);
-}
-
-void bfs1D(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
-    auto start_time = clk::now();
-
-    vec<i2> sts1d;
-    for(const auto& [s,t] : sts){
-        const auto& [sx,sy] = s;
-        const auto& [tx,ty] = t;
-        sts1d.emplace_back(sx*L + sy, tx*L + ty);
-    }
-    vec2<int> graph(L*L);
-    rep(x,L){
-        rep(y,L){
-            int v = x*L + y;
-            for(const auto& [dx,dy] : dirs){
-                int nx = x+dx;
-                int ny = y+dy;
-                if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
-                int nv = nx*L + ny;
-                graph[v].push_back(nv);
-            }
-        }
-    }
-
-    rep(m,M){
-        const auto& [s,t] = sts1d[m];
-        std::deque<int> dq;
-        dq.emplace_back(s);
-        vec<int> dist(L*L, inf);
-        dist[s] = 0;
-        while(!dq.empty()){
-            const auto v = dq.front();
-            dq.pop_front();
-            if(v == t){
-                break;
-            }
-            for(const auto nv : graph[v]){
-                if(dist[v] + 1 < dist[nv]){
-                    dist[nv] = dist[v] + 1;
-                    dq.emplace_back(nv);
-                }
-            }
-        }
-        assert(dist[t] == ans[m]);
-    }
-    auto end_time = clk::now();
-    double elapsed = getElapsed(start_time, end_time);
-    dprint("bfs1D:", elapsed);
-}
-
-void bfs1DStaticDist(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
-    auto start_time = clk::now();
-
-    vec<i2> sts1d;
-    for(const auto& [s,t] : sts){
-        const auto& [sx,sy] = s;
-        const auto& [tx,ty] = t;
-        sts1d.emplace_back(sx*L + sy, tx*L + ty);
-    }
-    vec2<int> graph(L*L);
-    rep(x,L){
-        rep(y,L){
-            int v = x*L + y;
-            for(const auto& [dx,dy] : dirs){
-                int nx = x+dx;
-                int ny = y+dy;
-                if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
-                int nv = nx*L + ny;
-                graph[v].push_back(nv);
-            }
-        }
-    }
-
-    vec<int> dist(L*L, inf);
-
-    constexpr int inflate = 2 * L;
-
-    rep(m,M){
-        const auto& [s,t] = sts1d[m];
-        std::deque<int> dq;
-        dq.emplace_back(s);
-        dist[s] = inflate * (M-m);
-        while(!dq.empty()){
-            const auto v = dq.front();
-            dq.pop_front();
-            if(v == t){
-                break;
-            }
-            bool find = false;
-            for(const auto nv : graph[v]){
-                if(dist[v] + 1 < dist[nv]){
-                    dist[nv] = dist[v] + 1;
-                    dq.emplace_back(nv);
-                }
-            }
-        }
-        assert(dist[t] - inflate * (M-m) == ans[m]);
-    }
-    auto end_time = clk::now();
-    double elapsed = getElapsed(start_time, end_time);
-    dprint("bfs1D:", elapsed);
-}
-
-int index(int x, int y){
-    return x*L + y;
-}
-i2 pos(int i){
-    return {i/L, i%L};
-}
-
-int h(int v){
-    // sholt be 0 <= h(v) <= true h(v)
-    const auto [x,y] = pos(v);
-    int nx = L/2;
-    int ny = L/2;
-    return (std::abs(x-nx) + std::abs(y-ny))/2;
-}
-
-int cost(int v, int nv){
-    const auto [x,y] = pos(v);
-    const auto [nx,ny] = pos(nv);
-    return std::abs(x-nx) + std::abs(y-ny);
-}
-
-
-void bfs1DAstar(vec<std::pair<i2,i2>>& sts, vec<int>& ans){
-    auto start_time = clk::now();
-
-    vec<i2> sts1d;
-    for(const auto& [s,t] : sts){
-        const auto& [sx,sy] = s;
-        const auto& [tx,ty] = t;
-        sts1d.emplace_back(sx*L + sy, tx*L + ty);
-    }
-    vec2<int> graph(L*L);
-    rep(x,L){
-        rep(y,L){
-            int v = x*L + y;
-            for(const auto& [dx,dy] : dirs){
-                int nx = x+dx;
-                int ny = y+dy;
-                if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
-                int nv = nx*L + ny;
-                graph[v].push_back(nv);
-            }
-        }
-    }
-
-    vec<bool> isClose(L*L,false);
-    vec<int> f(L*L,inf);
-    std::priority_queue<i2,vec<i2>,std::greater<i2>> open;
-
-    rep(m,M){
-        std::fill(all(isClose), false);
-        std::fill(all(f), inf);
-        const auto& [s,t] = sts1d[m];
-        f[s] = h(s);
-        open.emplace(f[s],s);
-        while(!open.empty()){
-            const auto [fv,v] = open.top();
-            open.pop();
-            if(f[v] < fv || isClose[v]) continue;
-            if(v == t) break;
-            isClose[v] = true;
-            for(const auto nv : graph[v]){
-                int fnv = (f[v] - h(v)) + cost(v,nv) + h(nv);
-                open.emplace(fnv, nv);
-                if(fnv < f[nv]){
-                    f[nv] = fnv;
-                    if(isClose[nv]){
-                        isClose[nv] = false;
-                    }
-                }
-            }
-        }
-        assert(f[t] == ans[m]);
-    }
-
-    auto end_time = clk::now();
-    double elapsed = getElapsed(start_time, end_time);
-    dprint("bfs1DAstar:", elapsed);
-}
-
-vec2<uint32_t> bfs(vec2<int>& field, i2 s){
+uint32_t bfs(const vec2<int>& field, const i2& s, const i2& t){
     uint32_t inf = 1<<30;
     size_t size = field.size();
     static const vec<i2> dirs = {{1,0},{0,1},{-1,0},{0,-1}};
     std::deque<i2> dq;
     dq.emplace_back(s);
     vec2<uint32_t> dist(size, vec<uint32_t>(size, inf));
-    const auto& [x,y] = s;
-    dist[x][y] = 0;
+    const auto& [sx,sy] = s;
+    const auto& [tx,ty] = t;
+    dist[sx][sy] = 0;
     while(!dq.empty()){
-        const auto [x,y] = dq.front();
+        const auto& [x,y] = dq.front();
         dq.pop_front();
+        if(x == tx && y == ty) break;
         for(const auto& [dx,dy] : dirs){
             int nx = x + dx;
             int ny = y + dy;
@@ -457,11 +242,11 @@ vec2<uint32_t> bfs(vec2<int>& field, i2 s){
             }
         }
     }
-    return dist;
+    return dist[tx][ty];
 }
 
-vec<uint32_t> bfs(vec2<int>& graph, int s){
-    uint32_t inf = 1<<20;
+uint32_t bfs(const vec2<int>& graph, const int s, const int t){
+    uint32_t inf = 1<<30;
     size_t size = graph.size();
     std::deque<int> dq;
     dq.push_back(s);
@@ -470,6 +255,7 @@ vec<uint32_t> bfs(vec2<int>& graph, int s){
     while(!dq.empty()){
         const auto v = dq.front();
         dq.pop_front();
+        if(v==t) break;
         for(const auto nv : graph[v]){
             if(dist[v] + 1 < dist[nv]){
                 dist[nv] = dist[v] + 1;
@@ -477,7 +263,7 @@ vec<uint32_t> bfs(vec2<int>& graph, int s){
             }
         }
     }
-    return dist;
+    return dist[t];
 }
 
 vec2<int> make1dGraph(vec2<int>& field){
@@ -526,31 +312,23 @@ void printBitBoard(const std::bitset<BIT_SIZE>& bitboard, size_t size){
     std::cerr << "\n";
 }
 
-vec<uint32_t> bfsBitBoard(const std::bitset<BIT_SIZE>& bitboard, int s, size_t size){
-    uint32_t inf = 1<<20;
-    std::deque<int> dq;
-    dq.push_back(s);
-    vec<uint32_t> dist(size * size, inf);
-    dist[s] = 0;
-    static const vec<i2> dirs = {{1,0},{0,1},{-1,0},{0,-1}};
+uint32_t bfsBitBoard(const std::bitset<BIT_SIZE>& free_bit_board, int s, int t, size_t size){
+
+    if(s==t) return 0;
 
     auto temp_board = std::bitset<BIT_SIZE>();
-    temp_board.set(s);
+
+    temp_board[s] = true;
     
-    vec<std::bitset<BIT_SIZE>> history;
-    history.push_back(temp_board);
-    rep(i,10){
-        temp_board |= temp_board>>1 | temp_board<<1 | temp_board<<size | temp_board>>size;
-        temp_board ^= bitboard & temp_board;
-        //printBitBoard(temp_board, size);
-        history.push_back(temp_board);
+    rep(d,size*size){
+        temp_board |= ((temp_board&right_guard)<<1) | ((temp_board&left_guard)>>1) | (temp_board>>size) | (temp_board<<size);
+        temp_board &= free_bit_board;
+        if(temp_board[t]) return d+1;
     }
-    exit(0);
-    return dist;
+    return 1<<30;
 }
 
 int main(){
-    constexpr size_t L = 8;
     vec<vec<int>> field(L, vec<int>(L, 0));
     const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
     rep(i,5){
@@ -565,16 +343,48 @@ int main(){
     }
     for(const auto row : field) dprint(row);
 
+    rep(x,L){
+        rep(y,L){
+            int v = L*x + y;
+            if(y < L-1) right_guard.set(v);
+            if(0 < y) left_guard.set(v);
+            if(0 < x) upper_guard.set(v);
+            if(x < L-1) lower_guard.set(v);
+        }
+    }
+
+    constexpr int M = 100;
+    using Query = std::pair<i2,i2>;
+    vec<Query> queries;
+    vec<i2> queries1d;
+    rep(i,M){
+        int start_x, start_y, end_x, end_y;
+        while(true){
+            start_x = randint(L);
+            start_y = randint(L);
+            if(!field[start_x][start_y]) break;
+        }
+        while(true){
+            end_x = randint(L);
+            end_y = randint(L);
+            if(!field[end_x][end_y]) break;
+        }
+        queries.emplace_back(i2{start_x, start_y}, i2{end_x, end_y});
+        queries1d.emplace_back(L*start_x + start_y, L*end_x + end_y);
+    }
+
     auto graph = make1dGraph(field);
     auto bit_board = makeBitBoard(field);
+    auto free_bit_board = bit_board;
+    free_bit_board.flip();
+    vec2<int> sols(3);
+    rep(i,3) sols[i].reserve(M);
 
     {
         auto start_time = clk::now();
-       vec2<uint32_t> dist;
-        rep(x,L){
-            rep(y,L){
-                dist = bfs(field, i2{x,y});
-            }
+        for(const auto& [start, end] : queries){
+             int d = bfs(field, start, end);
+             sols[0].push_back(d);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
@@ -582,8 +392,9 @@ int main(){
     {
         vec<uint32_t> dist;
         auto start_time = clk::now();
-        rep(v,L*L){
-            dist = bfs(graph, v);
+        for(const auto& [start, end] : queries1d){
+            int d =bfs(graph, start, end);
+            sols[1].push_back(d);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
@@ -591,11 +402,15 @@ int main(){
     {
         vec<uint32_t> dist;
         auto start_time = clk::now();
-        rep(v,L*L){
-            dist = bfsBitBoard(bit_board, v, L);
+        for(const auto& [start, end] : queries1d){
+            int d = bfsBitBoard(free_bit_board, start, end, L);
+            sols[2].push_back(d);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
+    }
+    rep(i,3){
+        dprint(sols[i]);
     }
     
     return 0;
