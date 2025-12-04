@@ -217,24 +217,23 @@ void deconstruct(){
 // main
 
 
-uint32_t bfs(const vec2<int>& field, const i2& s, const i2& t){
+uint32_t bfs2d(const vec2<int>& field, const i2& s, const i2& t){
     uint32_t inf = 1<<30;
-    size_t size = field.size();
     static const vec<i2> dirs = {{1,0},{0,1},{-1,0},{0,-1}};
     std::deque<i2> dq;
     dq.emplace_back(s);
-    vec2<uint32_t> dist(size, vec<uint32_t>(size, inf));
+    vec2<uint32_t> dist(L, vec<uint32_t>(L, inf));
     const auto& [sx,sy] = s;
     const auto& [tx,ty] = t;
     dist[sx][sy] = 0;
     while(!dq.empty()){
-        const auto& [x,y] = dq.front();
+        const auto [x,y] = dq.front();
         dq.pop_front();
         if(x == tx && y == ty) break;
         for(const auto& [dx,dy] : dirs){
             int nx = x + dx;
             int ny = y + dy;
-            if(nx < 0 || size <= nx || ny < 0 || size <= ny) continue;
+            if(nx < 0 || L <= nx || ny < 0 || L <= ny) continue;
             if(field[nx][ny]) continue;
             if(dist[x][y] + 1 < dist[nx][ny]){
                 dist[nx][ny] = dist[x][y] + 1;
@@ -245,12 +244,11 @@ uint32_t bfs(const vec2<int>& field, const i2& s, const i2& t){
     return dist[tx][ty];
 }
 
-uint32_t bfs(const vec2<int>& graph, const int s, const int t){
+uint32_t bfs1d(const vec2<int>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
-    size_t size = graph.size();
     std::deque<int> dq;
     dq.push_back(s);
-    vec<uint32_t> dist(size, inf);
+    vec<uint32_t> dist(L*L, inf);
     dist[s] = 0;
     while(!dq.empty()){
         const auto v = dq.front();
@@ -383,7 +381,7 @@ int main(){
     {
         auto start_time = clk::now();
         for(const auto& [start, end] : queries){
-             int d = bfs(field, start, end);
+             int d = bfs2d(field, start, end);
              sols[0].push_back(d);
         }
         auto end_time = clk::now();
@@ -393,7 +391,7 @@ int main(){
         vec<uint32_t> dist;
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
-            int d =bfs(graph, start, end);
+            int d =bfs1d(graph, start, end);
             sols[1].push_back(d);
         }
         auto end_time = clk::now();
