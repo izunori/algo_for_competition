@@ -314,14 +314,22 @@ uint32_t bfsBitBoard(const std::bitset<BIT_SIZE>& free_bit_board, int s, int t, 
 
     if(s==t) return 0;
 
-    auto temp_board = std::bitset<BIT_SIZE>();
+    auto current = std::bitset<BIT_SIZE>();
 
-    temp_board[s] = true;
+    current[s] = true;
     
     rep(d,size*size){
-        temp_board |= ((temp_board&right_guard)<<1) | ((temp_board&left_guard)>>1) | (temp_board>>size) | (temp_board<<size);
-        temp_board &= free_bit_board;
-        if(temp_board[t]) return d+1;
+        auto next = current;
+        next |= (current&right_guard)<<1;
+        next |= (current&left_guard)>>1;
+        next |= (current>>size);
+        next |= (current<<size);
+        next &= free_bit_board;
+        if(current == next){
+            break;
+        }
+        if(next[t]) return d+1;
+        std::swap(current, next);
     }
     return 1<<30;
 }
