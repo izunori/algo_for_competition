@@ -498,8 +498,14 @@ vec2<int> make1dGraph(vec2<int>& field){
     return result;
 }
 
+std::bitset<100*100> makeBitBoard(const vec2<int>& field){
+
+    std::bitset<100*100> result;
+    return result;
+}
+
 int main(){
-    size_t L = 64;
+    constexpr size_t L = 64;
     vec<vec<int>> field(L, vec<int>(L, 0));
     const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
     rep(i,5){
@@ -515,10 +521,11 @@ int main(){
     for(const auto row : field) dprint(row);
 
     auto graph = make1dGraph(field);
+    auto bit_board = makeBitBoard(field);
 
     {
         auto start_time = clk::now();
-        vec2<uint32_t> dist;
+       vec2<uint32_t> dist;
         rep(x,L){
             rep(y,L){
                 dist = bfs(field, i2{x,y});
