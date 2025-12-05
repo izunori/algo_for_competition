@@ -55,7 +55,7 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t L = 10;
+constexpr size_t L = 64;
 constexpr size_t BIT_SIZE = L*L;
 auto right_guard = std::bitset<BIT_SIZE>();
 auto left_guard = std::bitset<BIT_SIZE>();
@@ -330,13 +330,16 @@ uint32_t DijkstraByRadixHeap(const vec2<i2>& graph, const int s, const int t){
 struct KQueue{
     vec2<int> qs;
     int max_size;
+    int size = 0;
     KQueue(int max_size):max_size(max_size){
         qs = vec2<int>(max_size);
     }
     void push(int c, int s){
         qs[c].push_back(s);
+        size++;
     }
     i2 pop(){
+        size--;
         rep(c,max_size){
             if(!qs[c].empty()){
                 int res = qs[c].back();
@@ -346,16 +349,13 @@ struct KQueue{
         }
     }
     bool empty(){
-        rep(c,max_size){
-            if(!qs[c].empty()) return false;
-        }
-        return true;
+        return size == 0;
     }
 };
 
 uint32_t DijkstraByKBFS(const vec2<i2>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
-    auto kq = KQueue(10000);
+    auto kq = KQueue(1000);
     kq.push(0, s);
     vec<uint32_t> dist(L*L, inf);
     dist[s] = 0;
@@ -403,7 +403,7 @@ int main(){
     for(const auto row : field) dprint(row);
 
 
-    constexpr int M = 10;
+    constexpr int M = 10000;
     using Query = std::pair<i2,i2>;
     vec<Query> queries;
     vec<i2> queries1d;
@@ -454,10 +454,12 @@ int main(){
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
-    dprint(queries);
-    rep(i,3){
-        dprint(sols[i]);
-    }
+    //dprint(queries);
+    //rep(i,3){
+    //    rep(j,10){
+    //        dprint(sols[i][j]);
+    //    }
+    //}
     
     return 0;
 }
