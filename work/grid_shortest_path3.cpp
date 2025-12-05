@@ -55,7 +55,7 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t L = 64;
+constexpr size_t L = 10;
 constexpr size_t BIT_SIZE = L*L;
 auto right_guard = std::bitset<BIT_SIZE>();
 auto left_guard = std::bitset<BIT_SIZE>();
@@ -78,7 +78,11 @@ template<typename T> void print(const T& v){ std::cerr << v; }
 template<typename... T> void print(const std::tuple<T...>& tp);
 template<typename T>
 void print(const std::pair<T,T>& p){
-    std::cerr << "(" << p.first << " " << p.second << ")";
+    std::cerr << "(";
+    print(p.first);
+    std::cerr << " ";
+    print(p.second);
+    std::cerr << ")";
 }
 template<typename T>
 void print(const std::vector<T>& vs){
@@ -284,30 +288,6 @@ vec2<i2> make1dGraph(vec2<int>& field){
     return result;
 }
 
-
-uint32_t bfsBitBoard(const std::bitset<BIT_SIZE>& free_bit_board, int s, int t, size_t size){
-    if(s==t) return 0;
-
-    auto current = std::bitset<BIT_SIZE>();
-
-    current[s] = true;
-    
-    rep(d,size*size){
-        auto next = current;
-        next |= (current&right_guard)<<1;
-        next |= (current&left_guard)>>1;
-        next |= (current>>size);
-        next |= (current<<size);
-        next &= free_bit_board;
-        if(current == next){
-            break;
-        }
-        if(next[t]) return d+1;
-        std::swap(current, next);
-    }
-    return 1<<30;
-}
-
 int main(){
     vec<vec<int>> field(L, vec<int>(L, 0));
     const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
@@ -319,7 +299,7 @@ int main(){
     for(const auto row : field) dprint(row);
 
 
-    constexpr int M = 100;
+    constexpr int M = 10;
     using Query = std::pair<i2,i2>;
     vec<Query> queries;
     vec<i2> queries1d;
@@ -352,6 +332,7 @@ int main(){
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
+    dprint(queries);
     rep(i,3){
         dprint(sols[i]);
     }
