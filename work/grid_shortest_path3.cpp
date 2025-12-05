@@ -331,22 +331,26 @@ struct KQueue{
     vec2<int> qs;
     int max_size;
     int size = 0;
+    //std::priority_queue<int,vec<int>,std::greater<int>> index_set;
+    vec<int> index_set;
     KQueue(int max_size):max_size(max_size){
         qs = vec2<int>(max_size);
     }
     void push(int c, int s){
+        if(qs[c].empty()){
+            index_set.push_back(c);
+            std::ranges::sort(index_set, std::ranges::greater());
+        }
         qs[c].push_back(s);
         size++;
     }
     i2 pop(){
         size--;
-        rep(c,max_size){
-            if(!qs[c].empty()){
-                int res = qs[c].back();
-                qs[c].pop_back();
-                return {c,res};
-            }
-        }
+        int c = index_set.back();
+        int res = qs[c].back();
+        qs[c].pop_back();
+        if(qs[c].empty()) index_set.pop_back();
+        return {c,res};
     }
     bool empty(){
         return size == 0;
@@ -355,7 +359,7 @@ struct KQueue{
 
 uint32_t DijkstraByKBFS(const vec2<i2>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
-    auto kq = KQueue(1000);
+    auto kq = KQueue(500);
     kq.push(0, s);
     vec<uint32_t> dist(L*L, inf);
     dist[s] = 0;
@@ -403,7 +407,7 @@ int main(){
     for(const auto row : field) dprint(row);
 
 
-    constexpr int M = 10;
+    constexpr int M = 10000;
     using Query = std::pair<i2,i2>;
     vec<Query> queries;
     vec<i2> queries1d;
@@ -454,10 +458,10 @@ int main(){
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
-    dprint(queries);
-    rep(i,3){
-        dprint(sols[i]);
-    }
+    //dprint(queries);
+    //rep(i,3){
+    //    dprint(sols[i]);
+    //}
     
     return 0;
 }
