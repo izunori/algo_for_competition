@@ -55,7 +55,7 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t L = 64;
+constexpr size_t L = 128;
 constexpr size_t BIT_SIZE = L*L;
 auto right_guard = std::bitset<BIT_SIZE>();
 auto left_guard = std::bitset<BIT_SIZE>();
@@ -218,11 +218,13 @@ void deconstruct(){
 
 
 uint32_t bfs2d(const vec2<int>& field, const i2& s, const i2& t){
-    uint32_t inf = 1<<30;
+    constexpr uint32_t inf = 1<<30;
     static const vec<i2> dirs = {{1,0},{0,1},{-1,0},{0,-1}};
-    std::deque<i2> dq;
+    static std::deque<i2> dq;
+    dq.clear();
     dq.emplace_back(s);
-    vec2<uint32_t> dist(L, vec<uint32_t>(L, inf));
+    static vec2<uint32_t> dist(L, vec<uint32_t>(L, inf));
+    rep(i,L) std::ranges::fill(dist[i], inf);
     const auto& [sx,sy] = s;
     const auto& [tx,ty] = t;
     dist[sx][sy] = 0;
@@ -245,10 +247,12 @@ uint32_t bfs2d(const vec2<int>& field, const i2& s, const i2& t){
 }
 
 uint32_t bfs1d(const vec2<int>& graph, const int s, const int t){
-    uint32_t inf = 1<<30;
-    std::deque<int> dq;
+    constexpr uint32_t inf = 1<<30;
+    static std::deque<int> dq;
+    dq.clear();
     dq.push_back(s);
-    vec<uint32_t> dist(L*L, inf);
+    static vec<uint32_t> dist(L*L);
+    std::ranges::fill(dist, inf);
     dist[s] = 0;
     while(!dq.empty()){
         const auto v = dq.front();
@@ -314,12 +318,13 @@ uint32_t bfsBitBoard(const std::bitset<BIT_SIZE>& free_bit_board, int s, int t, 
 
     if(s==t) return 0;
 
-    auto current = std::bitset<BIT_SIZE>();
-
+    static auto current = std::bitset<BIT_SIZE>();
+    static auto next = std::bitset<BIT_SIZE>();
+    current.reset();
     current[s] = true;
     
-    rep(d,size*size){
-        auto next = current;
+    rep(d,BIT_SIZE){
+        next = current;
         next |= (current&right_guard)<<1;
         next |= (current&left_guard)>>1;
         next |= (current>>size);
@@ -359,7 +364,7 @@ int main(){
         }
     }
 
-    constexpr int M = 100;
+    constexpr int M = 10000;
     using Query = std::pair<i2,i2>;
     vec<Query> queries;
     vec<i2> queries1d;
@@ -385,12 +390,15 @@ int main(){
     free_bit_board.flip();
     vec2<int> sols(3);
     rep(i,3) sols[i].reserve(M);
+    vec<ll> hash(3);
 
+    rep(i,2){
     {
         auto start_time = clk::now();
         for(const auto& [start, end] : queries){
              int d = bfs2d(field, start, end);
-             sols[0].push_back(d);
+             //sols[0].push_back(d);
+             hash[0] += d;
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
@@ -400,7 +408,8 @@ int main(){
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
             int d =bfs1d(graph, start, end);
-            sols[1].push_back(d);
+            //sols[1].push_back(d);
+            hash[1] += d;
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
@@ -410,14 +419,17 @@ int main(){
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
             int d = bfsBitBoard(free_bit_board, start, end, L);
-            sols[2].push_back(d);
+            //sols[2].push_back(d);
+            hash[2] += d;
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
-    rep(i,3){
-        dprint(sols[i]);
     }
+    //rep(i,3){
+    //    dprint(sols[i]);
+    //}
+    dprint(hash);
     
     return 0;
 }

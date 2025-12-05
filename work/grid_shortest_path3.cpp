@@ -55,7 +55,7 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t L = 64;
+constexpr size_t L = 32;
 constexpr size_t BIT_SIZE = L*L;
 auto right_guard = std::bitset<BIT_SIZE>();
 auto left_guard = std::bitset<BIT_SIZE>();
@@ -249,10 +249,11 @@ uint32_t bfs2d(const vec2<int>& field, const i2& s, const i2& t){
 }
 
 uint32_t Dijkstra(const vec2<i2>& graph, const int s, const int t){
-    uint32_t inf = 1<<30;
+    constexpr uint32_t inf = 1<<30;
     std::priority_queue<i2, vec<i2>, std::greater<i2>> hq;
     hq.emplace(0, s);
-    vec<uint32_t> dist(L*L, inf);
+    static vec<uint32_t> dist(L*L);
+    std::ranges::fill(dist, inf);
     dist[s] = 0;
     while(!hq.empty()){
         const auto [c,v] = hq.top();
@@ -305,13 +306,20 @@ struct RadixHeap
     v[0].pop_back();
     return ret;
   }
+  
+  void clear(){
+      size = 0; last = 0;
+      rep(i,33) v[i].clear();
+  }
 };
 
 uint32_t DijkstraByRadixHeap(const vec2<i2>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
-    RadixHeap<int> hq;
+    static RadixHeap<int> hq;
+    hq.clear();
     hq.push(0, s);
-    vec<uint32_t> dist(L*L, inf);
+    static vec<uint32_t> dist(L*L);
+    std::ranges::fill(dist, inf);
     dist[s] = 0;
     while(!hq.empty()){
         const auto [c,v] = hq.pop();
@@ -330,53 +338,60 @@ uint32_t DijkstraByRadixHeap(const vec2<i2>& graph, const int s, const int t){
 struct KQueue{
     vec2<int> qs;
     int max_size;
-    int size = 0;
-    std::priority_queue<int,vec<int>,std::greater<int>> index_set;
-    //vec<int> index_set;
+    //int size = 0;
+    //std::priority_queue<int,vec<int>,std::greater<int>> index_set;
+    vec<int> index_set;
     //std::bitset<500> index_set;
     //std::set<int> index_set;
     KQueue(int max_size):max_size(max_size){
         qs = vec2<int>(max_size);
-        //index_set.reserve(max_size);
+        index_set.reserve(max_size);
     }
     void push(int c, int s){
         if(qs[c].empty()){
             //index_set[c] = true;
-            index_set.push(c);
-            //index_set.push_back(c);
-            //std::ranges::sort(index_set, std::ranges::greater());
+            //index_set.push(c);
+            index_set.push_back(c);
+            std::ranges::sort(index_set, std::ranges::greater());
             //index_set.insert(std::ranges::lower_bound(index_set, -c), -c);
             //index_set.insert(c);
         }
         qs[c].push_back(s);
-        size++;
+        //size++;
     }
     i2 pop(){
-        size--;
+        //size--;
         //int c = index_set._Find_first();
-        int c = index_set.top();
-        //int c = -index_set.back();
+        //int c = index_set.top();
+        int c = index_set.back();
         //int c = *index_set.upper_bound(-1);
         int res = qs[c].back();
         qs[c].pop_back();
         if(qs[c].empty()){
             //index_set[c] = false;
-            index_set.pop();
-            //index_set.pop_back();
+            //index_set.pop();
+            index_set.pop_back();
             //index_set.erase(c);
         }
         return {c,res};
     }
     bool empty(){
-        return size == 0;
+        return index_set.empty();
+    }
+    void clear(){
+        //size = 0;
+        for(const auto c : index_set) qs[c].clear();
+        index_set.clear();
     }
 };
 
 uint32_t DijkstraByKBFS(const vec2<i2>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
-    auto kq = KQueue(500);
+    static auto kq = KQueue(500);
+    kq.clear();
     kq.push(0, s);
-    vec<uint32_t> dist(L*L, inf);
+    static vec<uint32_t> dist(L*L);
+    std::ranges::fill(dist, inf);
     dist[s] = 0;
     while(!kq.empty()){
         const auto [c,v] = kq.pop();
@@ -445,12 +460,14 @@ int main(){
     auto graph = make1dGraph(field);
     vec2<int> sols(3);
     rep(i,3) sols[i].reserve(M);
+    vec<ll> hash(3);
 
     {
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
              int d = Dijkstra(graph, start, end);
-             sols[0].push_back(d);
+             //sols[0].push_back(d);
+             hash[0] += d;
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
@@ -459,7 +476,8 @@ int main(){
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
              int d = DijkstraByRadixHeap(graph, start, end);
-             sols[1].push_back(d);
+             //sols[1].push_back(d);
+             hash[1] += d;
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
@@ -468,14 +486,21 @@ int main(){
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
              int d = DijkstraByKBFS(graph, start, end);
-             sols[2].push_back(d);
+             //sols[2].push_back(d);
+             hash[2] += d;
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
-    //dprint(queries);
-    //rep(i,3){
-    //    dprint(sols[i]);
+    dprint(hash);
+    //rep(j,100){
+    //    int c = sols[2][j];
+    //    rep(i,2){
+    //        if(c != sols[i][j]){
+    //            dprint("NG");
+    //            exit(0);
+    //        }
+    //    }
     //}
     
     return 0;
