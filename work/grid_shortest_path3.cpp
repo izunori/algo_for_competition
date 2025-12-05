@@ -55,7 +55,7 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t L = 32;
+constexpr size_t L = 16;
 constexpr size_t BIT_SIZE = L*L;
 auto right_guard = std::bitset<BIT_SIZE>();
 auto left_guard = std::bitset<BIT_SIZE>();
@@ -385,6 +385,43 @@ struct KQueue{
     }
 };
 
+struct RadixHeapInt {
+    using uint = unsigned int;
+    vec<uint> v[33];
+    uint last, sz;
+    RadixHeapInt() {
+        last = sz = 0;
+    }
+    int bsr(uint x){
+        if (x==0) return -1;
+        return 31 - __builtin_clz(x);
+    }
+    void push(uint x){
+        sz++;
+        v[bsr(x^last)+1].push_back(x);
+    }
+    uint pop() {
+        if (!v[0].size()) {
+            int i = 1;
+            while (!v[i].size()) i++;
+            uint new_last = *std::min_element(v[i].begin(), v[i].end());
+            for(uint x : v[i]){
+                v[bsr(x^new_last)+1].push_back(x);
+            }
+            last = new_last;
+            v[i].clear();
+        }
+        sz--;
+        v[0].pop_back();
+        return last;
+    }
+    void clear(){
+        for(auto& sub : v) sub.clear();
+        last = sz = 0;
+    }
+};
+
+
 uint32_t DijkstraByKBFS(const vec2<i2>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
     static auto kq = KQueue(500);
@@ -462,35 +499,37 @@ int main(){
     rep(i,3) sols[i].reserve(M);
     vec<ll> hash(3);
 
-    {
-        auto start_time = clk::now();
-        for(const auto& [start, end] : queries1d){
-             int d = Dijkstra(graph, start, end);
-             //sols[0].push_back(d);
-             hash[0] += d;
+    rep(i,2){
+        {
+            auto start_time = clk::now();
+            for(const auto& [start, end] : queries1d){
+                 int d = Dijkstra(graph, start, end);
+                 //sols[0].push_back(d);
+                 hash[0] += d;
+            }
+            auto end_time = clk::now();
+            dprint("elapsed:", getElapsed(start_time, end_time));
         }
-        auto end_time = clk::now();
-        dprint("elapsed:", getElapsed(start_time, end_time));
-    }
-    {
-        auto start_time = clk::now();
-        for(const auto& [start, end] : queries1d){
-             int d = DijkstraByRadixHeap(graph, start, end);
-             //sols[1].push_back(d);
-             hash[1] += d;
+        {
+            auto start_time = clk::now();
+            for(const auto& [start, end] : queries1d){
+                 int d = DijkstraByRadixHeap(graph, start, end);
+                 //sols[1].push_back(d);
+                 hash[1] += d;
+            }
+            auto end_time = clk::now();
+            dprint("elapsed:", getElapsed(start_time, end_time));
         }
-        auto end_time = clk::now();
-        dprint("elapsed:", getElapsed(start_time, end_time));
-    }
-    {
-        auto start_time = clk::now();
-        for(const auto& [start, end] : queries1d){
-             int d = DijkstraByKBFS(graph, start, end);
-             //sols[2].push_back(d);
-             hash[2] += d;
+        {
+            auto start_time = clk::now();
+            for(const auto& [start, end] : queries1d){
+                 int d = DijkstraByKBFS(graph, start, end);
+                 //sols[2].push_back(d);
+                 hash[2] += d;
+            }
+            auto end_time = clk::now();
+            dprint("elapsed:", getElapsed(start_time, end_time));
         }
-        auto end_time = clk::now();
-        dprint("elapsed:", getElapsed(start_time, end_time));
     }
     dprint(hash);
     //rep(j,100){
