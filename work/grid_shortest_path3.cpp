@@ -403,7 +403,7 @@ int main(){
     for(const auto row : field) dprint(row);
 
 
-    constexpr int M = 10000;
+    constexpr int M = 10;
     using Query = std::pair<i2,i2>;
     vec<Query> queries;
     vec<i2> queries1d;
@@ -448,18 +448,16 @@ int main(){
     {
         auto start_time = clk::now();
         for(const auto& [start, end] : queries1d){
-             int d = DijkstraByRadixHeap(graph, start, end);
+             int d = DijkstraByKBFS(graph, start, end);
              sols[2].push_back(d);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
     }
-    //dprint(queries);
-    //rep(i,3){
-    //    rep(j,10){
-    //        dprint(sols[i][j]);
-    //    }
-    //}
+    dprint(queries);
+    rep(i,3){
+        dprint(sols[i]);
+    }
     
     return 0;
 }
