@@ -269,6 +269,110 @@ uint32_t Dijkstra(const vec2<i2>& graph, const int s, const int t){
     return dist[t];
 }
 
+template< typename T >
+struct RadixHeap
+{
+  using uint = unsigned;
+  std::vector< std::pair< uint, T > > v[33];
+  uint size, last;
+
+  RadixHeap() : size(0), last(0) {}
+
+  bool empty() const { return size == 0; }
+
+  inline int getbit(int a)
+  {
+    return a ? 32 - __builtin_clz(a) : 0;
+  }
+
+  void push(uint key, const T &value)
+  {
+    ++size;
+    v[getbit(key ^ last)].emplace_back(key, value);
+  }
+
+  std::pair< uint, T > pop()
+  {
+    if(v[0].empty()) {
+      int idx = 1;
+      while(v[idx].empty()) ++idx;
+      last = std::min_element(std::begin(v[idx]), std::end(v[idx]))->first;
+      for(auto &p : v[idx]) v[getbit(p.first ^ last)].emplace_back(p);
+      v[idx].clear();
+    }
+    --size;
+    auto ret = v[0].back();
+    v[0].pop_back();
+    return ret;
+  }
+};
+
+uint32_t DijkstraByRadixHeap(const vec2<i2>& graph, const int s, const int t){
+    uint32_t inf = 1<<30;
+    RadixHeap<int> hq;
+    hq.push(0, s);
+    vec<uint32_t> dist(L*L, inf);
+    dist[s] = 0;
+    while(!hq.empty()){
+        const auto [c,v] = hq.pop();
+        if(v==t) break;
+        if(dist[v] < c) continue;
+        for(const auto [nv,dc] : graph[v]){
+            if(dist[v] + dc < dist[nv]){
+                dist[nv] = dist[v] + dc;
+                hq.push(dist[nv], nv);
+            }
+        }
+    }
+    return dist[t];
+}
+
+struct KQueue{
+    vec2<int> qs;
+    int max_size;
+    KQueue(int max_size):max_size(max_size){
+        qs = vec2<int>(max_size);
+    }
+    void push(int c, int s){
+        qs[c].push_back(s);
+    }
+    i2 pop(){
+        rep(c,max_size){
+            if(!qs[c].empty()){
+                int res = qs[c].back();
+                qs[c].pop_back();
+                return {c,res};
+            }
+        }
+    }
+    bool empty(){
+        rep(c,max_size){
+            if(!qs[c].empty()) return false;
+        }
+        return true;
+    }
+};
+
+uint32_t DijkstraByKBFS(const vec2<i2>& graph, const int s, const int t){
+    uint32_t inf = 1<<30;
+    auto kq = KQueue(10000);
+    kq.push(0, s);
+    vec<uint32_t> dist(L*L, inf);
+    dist[s] = 0;
+    while(!kq.empty()){
+        const auto [c,v] = kq.pop();
+        if(v==t) break;
+        if(dist[v] < c) continue;
+        for(const auto [nv,dc] : graph[v]){
+            if(dist[v] + dc < dist[nv]){
+                dist[nv] = dist[v] + dc;
+                kq.push(dist[nv], nv);
+            }
+        }
+    }
+    return dist[t];
+}
+
 vec2<i2> make1dGraph(vec2<int>& field){
     size_t size = field.size();
     vec2<i2> result(size * size);
@@ -328,6 +432,24 @@ int main(){
         for(const auto& [start, end] : queries1d){
              int d = Dijkstra(graph, start, end);
              sols[0].push_back(d);
+        }
+        auto end_time = clk::now();
+        dprint("elapsed:", getElapsed(start_time, end_time));
+    }
+    {
+        auto start_time = clk::now();
+        for(const auto& [start, end] : queries1d){
+             int d = DijkstraByRadixHeap(graph, start, end);
+             sols[1].push_back(d);
+        }
+        auto end_time = clk::now();
+        dprint("elapsed:", getElapsed(start_time, end_time));
+    }
+    {
+        auto start_time = clk::now();
+        for(const auto& [start, end] : queries1d){
+             int d = DijkstraByRadixHeap(graph, start, end);
+             sols[2].push_back(d);
         }
         auto end_time = clk::now();
         dprint("elapsed:", getElapsed(start_time, end_time));
