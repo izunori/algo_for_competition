@@ -331,25 +331,40 @@ struct KQueue{
     vec2<int> qs;
     int max_size;
     int size = 0;
-    //std::priority_queue<int,vec<int>,std::greater<int>> index_set;
-    vec<int> index_set;
+    std::priority_queue<int,vec<int>,std::greater<int>> index_set;
+    //vec<int> index_set;
+    //std::bitset<500> index_set;
+    //std::set<int> index_set;
     KQueue(int max_size):max_size(max_size){
         qs = vec2<int>(max_size);
+        //index_set.reserve(max_size);
     }
     void push(int c, int s){
         if(qs[c].empty()){
-            index_set.push_back(c);
-            std::ranges::sort(index_set, std::ranges::greater());
+            //index_set[c] = true;
+            index_set.push(c);
+            //index_set.push_back(c);
+            //std::ranges::sort(index_set, std::ranges::greater());
+            //index_set.insert(std::ranges::lower_bound(index_set, -c), -c);
+            //index_set.insert(c);
         }
         qs[c].push_back(s);
         size++;
     }
     i2 pop(){
         size--;
-        int c = index_set.back();
+        //int c = index_set._Find_first();
+        int c = index_set.top();
+        //int c = -index_set.back();
+        //int c = *index_set.upper_bound(-1);
         int res = qs[c].back();
         qs[c].pop_back();
-        if(qs[c].empty()) index_set.pop_back();
+        if(qs[c].empty()){
+            //index_set[c] = false;
+            index_set.pop();
+            //index_set.pop_back();
+            //index_set.erase(c);
+        }
         return {c,res};
     }
     bool empty(){
