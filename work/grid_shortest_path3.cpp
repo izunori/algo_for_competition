@@ -55,7 +55,8 @@ const double p10_k = std::pow(10, k);
 
 // global
 
-constexpr size_t L = 16;
+constexpr size_t L = 64;
+constexpr size_t MC = 30;
 constexpr size_t BIT_SIZE = L*L;
 auto right_guard = std::bitset<BIT_SIZE>();
 auto left_guard = std::bitset<BIT_SIZE>();
@@ -448,7 +449,7 @@ struct KQueue{
 
 uint32_t DijkstraByKBFS(const vec2<i2>& graph, const int s, const int t){
     uint32_t inf = 1<<30;
-    static auto kq = KQueue(500);
+    static auto kq = KQueue(L*MC);
     kq.clear();
     kq.push(0, s);
     static vec<uint32_t> dist(L*L);
@@ -492,7 +493,7 @@ int main(){
     const vec<i2> dirs{{1,0},{0,1},{-1,0},{0,-1}};
     rep(x,L){
         rep(y,L){
-            field[x][y] = randint(10);
+            field[x][y] = randint(MC);
         }
     }
     for(const auto row : field) dprint(row);
