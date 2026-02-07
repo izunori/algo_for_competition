@@ -35,6 +35,39 @@ struct fastVector{
 };
 
 template<typename T>
+struct fastVector2{
+    vec2<T> vs;
+    vec<int> _sizes;
+    fastVector(int len, int cap = 20){
+        vs = vec<T>(len, vec<T>(cap, 0));
+        _sizes = vec<int>(len, 0);
+    }
+    vec<T>& operator[](int n) {
+        return vs[n];
+    }
+    void push_back(T x){
+        v[_size] = x;
+        _size++;
+    }
+    void clear(){
+        _size = 0;
+    }
+    bool empty(){
+        return _size == 0;
+    }
+    size_t size(){
+        return _size;
+    }
+    bool contains(T x){
+        return std::find(v.begin(),v.begin()+_size, x) != v.begin() + _size;
+    }
+    auto begin() { return v.begin(); }
+    auto end()   { return v.begin() + _size; }
+    auto begin() const { return v.begin(); }
+    auto end()   const { return v.begin() + _size; }
+};
+
+template<typename T>
 struct fastDeque{
     vec<T> buf;
     T r = 0;

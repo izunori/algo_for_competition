@@ -70,3 +70,19 @@ void dprint(const T&... rest){
 double getElapsed(clk::time_point& start, clk::time_point& end){
     return (std::chrono::duration<double, std::milli>(end-start)).count() / 1000;
 }
+
+uint32_t xorShift() {
+  static uint32_t y = 2463534242;
+  y = y ^ (y << 13); y = y ^ (y >> 17);
+  return y = y ^ (y << 5);
+}
+
+uint32_t randint(const uint32_t size){
+    uint32_t a = xorShift();
+    uint64_t m = (uint64_t)a * (uint64_t) size;
+    return m >> 32;
+}
+
+bool randbool(){
+    return xorShift() & 1;
+}
