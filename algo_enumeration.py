@@ -55,6 +55,21 @@ def Lucus(n,p):
     return res
 
 print(Lucus(5,3))
- 
 
+# 1st Starling number on N
+memo = {0:[1], 1:[0,1]}
+def findS(n):
+    if n in memo:
+        return memo[n]
+    t = n//2
+    if t*2 == n:
+        f = findS(t)
+        sf = shift(f,t)
+        return nnt.polymul(f,sf)
+    else:
+        f = findS(t)
+        sf = shift(f,t)
+        r = nnt.polymul(f,sf)
+        l = len(r)
+        return [((n-1) * r[i] + (r[i-1] if i > 0 else 0))%MOD for i in range(l)] + [1]
     

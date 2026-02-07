@@ -295,7 +295,7 @@ void useArray(vec<tint> va, vec<tint> vb, vec<i2>& squery){
     int k = 0;
     start = clk::now();
     for(const auto& [i,j] : squery){
-        k += v[i[0];
+        k += v[i][0];
         k -= v[j][1];
     }
     end = clk::now();

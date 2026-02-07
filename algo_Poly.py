@@ -87,6 +87,13 @@ def polyExp(f):
         m *= 2
     return g[:r]
     
+def shift(f,c): # f(x+c)
+    nf = len(f)
+    p = [f[i] * fact[i] % MOD for i in range(nf)]
+    q = [pow(c,i,MOD) * ifact[i] % MOD for i in range(nf)][::-1]
+    nnt = NNT()
+    b = nnt.polymul(p,q)
+    return [b[j+nf-1]*ifact[j]%MOD for j in range(nf)]
 
 def perfInv():
     print("--perf Inversion")
@@ -226,7 +233,6 @@ def perfDiv():
     start=time()
     q,r=polyDiv(f,g)
     print(f"{time()-start}") 
-
 
 if __name__=='__main__':
     testInv()
