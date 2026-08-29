@@ -78,19 +78,22 @@ struct fastDeque{
     T front(){
         return buf[l];
     }
-    void pop_front(){
+    void pop_front() const {
         l++;
     }
-    void push_back(T x){
+    void push_back(T x) const {
         buf[r] = x;
         r++;
     }
-    bool empty(){
+    bool empty() const {
         return l == r;
     }
-    size_t size(){
+    size_t size() const {
         return r-l;
     }
+
+    T& operator[](std::size_t n) & { return buf[l+n]; }
+    const T& operator[](std::size_t n) const& { return buf[l+n]; }
 
     void clear(){
         l = 0;
