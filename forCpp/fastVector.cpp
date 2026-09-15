@@ -19,46 +19,13 @@ struct fastVector{
     void clear(){
         _size = 0;
     }
-    bool empty(){
+    bool empty() const {
         return _size == 0;
     }
-    size_t size(){
+    size_t size() const {
         return _size;
     }
-    bool contains(T x){
-        return std::find(v.begin(),v.begin()+_size, x) != v.begin() + _size;
-    }
-    auto begin() { return v.begin(); }
-    auto end()   { return v.begin() + _size; }
-    auto begin() const { return v.begin(); }
-    auto end()   const { return v.begin() + _size; }
-};
-
-template<typename T>
-struct fastVector2{
-    vec2<T> vs;
-    vec<int> _sizes;
-    fastVector(int len, int cap = 20){
-        vs = vec<T>(len, vec<T>(cap, 0));
-        _sizes = vec<int>(len, 0);
-    }
-    vec<T>& operator[](int n) {
-        return vs[n];
-    }
-    void push_back(T x){
-        v[_size] = x;
-        _size++;
-    }
-    void clear(){
-        _size = 0;
-    }
-    bool empty(){
-        return _size == 0;
-    }
-    size_t size(){
-        return _size;
-    }
-    bool contains(T x){
+    bool contains(T x) const {
         return std::find(v.begin(),v.begin()+_size, x) != v.begin() + _size;
     }
     auto begin() { return v.begin(); }
@@ -78,10 +45,10 @@ struct fastDeque{
     T front(){
         return buf[l];
     }
-    void pop_front() const {
+    void pop_front() {
         l++;
     }
-    void push_back(T x) const {
+    void push_back(T x) {
         buf[r] = x;
         r++;
     }
@@ -136,7 +103,7 @@ int main(){
             }
         }
         auto end_time = clk::now();
-        dprint(getElapsed(start_time, end_time));
+        dprint("fastVector:", getElapsed(start_time, end_time));
     }
     {
         auto start_time = clk::now();
@@ -150,6 +117,6 @@ int main(){
             }
         }
         auto end_time = clk::now();
-        dprint(getElapsed(start_time, end_time));
+        dprint("std::vector:", getElapsed(start_time, end_time));
     }
 }
