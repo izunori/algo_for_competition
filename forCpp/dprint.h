@@ -23,6 +23,7 @@ template<typename T>
 using vec = std::vector<T>;
 template<typename T>
 using vec2 = vec<vec<T>>;
+using ull = unsigned long long;
 using ll = long long;
 template<typename T>
 using t2 = std::tuple<T, T>;
