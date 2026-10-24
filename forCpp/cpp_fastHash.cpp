@@ -1,6 +1,6 @@
 #include"./dprint.h"
 
-constexpr int HASH_SIZE = 1<<20;
+constexpr int HASH_SIZE = 1<<22;
 constexpr int HASH_MASK = HASH_SIZE-1;
 struct fastHash{
     int scnt = 1;
@@ -23,7 +23,7 @@ struct fastHash{
 
     bool contains(ull x){
         uint i = x & HASH_MASK;
-        while(data[i] != 0ull){
+        while(stamp[i] == scnt){
             if(data[i] == x) return true;
             i = (i+1) & HASH_MASK;
         }
